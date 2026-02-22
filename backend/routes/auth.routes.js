@@ -9,11 +9,30 @@ const router = express.Router();
 router.post('/register', async (req, res, next) => {
     try {
         const { email, password } = req.body;
+
         if (!validateEmail(email) || !validatePassword(password)) {
-            return res.status(400).json({ message: 'Invalid email or password format' });
+            return res.status(400).json({
+                message: 'Invalid email or password format'
+            });
         }
+
         const result = await registerUser({ email, password });
-        res.status(201).json({ user: { id: result.user._id, email: result.user.email }, token: result.token });
+
+        // 🍪 Set JWT cookie
+        res.cookie("token", result.token, {
+            httpOnly: true,
+            secure: false,        // true in production (https)
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.status(201).json({
+            user: {
+                id: result.user._id,
+                email: result.user.email
+            }
+        });
+
     } catch (err) {
         next(err);
     }
