@@ -1,35 +1,33 @@
 import axios from 'axios';
 
-const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
-const CLAUDE_ENDPOINT = process.env.CLAUDE_ENDPOINT || 'https://api.anthropic.com/v1/complete';
-
-// Wrapper to generate a response from Claude. Send prompt + context.
 export async function generateResponse(prompt, context = '') {
-    if (!CLAUDE_API_KEY) throw new Error('CLAUDE_API_KEY not configured');
+    const GROK_API_KEY = process.env.GROK_API_KEY;
+    const GROK_ENDPOINT = process.env.GROK_ENDPOINT || 'https://api.x.ai/v1/chat/completions';
 
-    // Build a simple prompt merging context and user prompt
-    const input = `${context}\n\nUser: ${prompt}\nAI:`;
+    if (!GROK_API_KEY) throw new Error('GROK_API_KEY not configured');
 
     try {
         const res = await axios.post(
-            CLAUDE_ENDPOINT,
+            GROK_ENDPOINT,
             {
-                model: 'claude-2',
-                prompt: input,
-                max_tokens_to_sample: 1000,
+                model: "grok-1",
+                messages: [
+                    { role: "system", content: context || "You are a helpful AI assistant." },
+                    { role: "user", content: prompt }
+                ],
+                max_tokens: 500
             },
             {
                 headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${CLAUDE_API_KEY}`,
-                },
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${GROK_API_KEY}`
+                }
             }
         );
 
-        // Some Claude endpoints return text in different shapes; we defensively parse
-        const text = res?.data?.completion || res?.data?.text || res?.data?.output || '';
-        return text;
+        return res?.data?.choices?.[0]?.message?.content || '';
+
     } catch (err) {
-        throw new Error(`Claude API error: ${err.message}`);
+        throw new Error(`Grok API error: ${err.response?.data?.error || err.message}`);
     }
 }

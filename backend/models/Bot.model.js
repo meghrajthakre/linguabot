@@ -1,17 +1,30 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const { Schema, model } = mongoose;
-
-const BotSchema = new Schema(
+const botSchema = new mongoose.Schema(
     {
-        name: { type: String, required: true },
-        description: { type: String },
-        trainingData: { type: String },
-        language: { type: String, default: 'en' },
-        owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        description: {
+            type: String,
+        },
+        trainingData: {
+            type: String,
+        },
+        language: {
+            type: String,
+            required: true,
+        },
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true,
+        },
     },
     { timestamps: true }
 );
 
-const Bot = model('Bot', BotSchema);
-export default Bot;
+export default mongoose.model("Bot", botSchema);

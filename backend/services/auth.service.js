@@ -1,14 +1,12 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.model.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
-const JWT_EXPIRES_IN = '7d';
 
 // Create JWT token for a user
 export function generateToken(user) {
-    return jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, {
-        expiresIn: JWT_EXPIRES_IN,
-    });
+    return jwt.sign({ id: user._id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' });
 }
 
 // Register a new user

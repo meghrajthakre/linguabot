@@ -1,68 +1,72 @@
-import express from 'express';
-import { registerUser, loginUser } from '../services/auth.service.js';
-import { validateEmail, validatePassword } from '../utils/validators.js';
-import authMiddleware from '../middleware/auth.middleware.js';
+import express from "express";
+import { registerUser, loginUser } from "../services/auth.service.js";
 
 const router = express.Router();
 
-// Register route
-router.post('/register', async (req, res, next) => {
+/* ===============================
+   REGISTER
+================================ */
+router.post("/register", async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        if (!validateEmail(email) || !validatePassword(password)) {
-            return res.status(400).json({
-                message: 'Invalid email or password format'
-            });
-        }
+        const { user, token } = await registerUser({ email, password });
 
-        const result = await registerUser({ email, password });
-
-        // 🍪 Set JWT cookie
-        res.cookie("token", result.token, {
+        // Set cookie
+        res.cookie("token", token, {
             httpOnly: true,
-            secure: false,        // true in production (https)
+            secure: false, // true in production (HTTPS)
             sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
         res.status(201).json({
             user: {
-                id: result.user._id,
-                email: result.user.email
-            }
+                id: user._id,
+                email: user.email,
+                role: user.role,
+            },
         });
-
     } catch (err) {
         next(err);
     }
 });
 
-// Login route
-router.post('/login',authMiddleware, async (req, res, next) => {
+/* ===============================
+   LOGIN
+================================ */
+router.post("/login", async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        const result = await loginUser({ email, password });
+        const { user, token } = await loginUser({ email, password });
 
-        // 🍪 Set JWT in HttpOnly cookie
-        res.cookie("token", result.token, {
-            httpOnly: true,        // JS access nahi kar sakta
-            secure: false,         // true in production (https)
-            sameSite: "lax",       // CSRF protection
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        // Set cookie
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: false, // true in production
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         res.json({
             user: {
-                id: result.user._id,
-                email: result.user.email
-            }
+                id: user._id,
+                email: user.email,
+                role: user.role,
+            },
         });
-
     } catch (err) {
         next(err);
     }
+});
+
+/* ===============================
+   LOGOUT
+================================ */
+router.post("/logout", (req, res) => {
+    res.clearCookie("token");
+    res.json({ message: "Logged out successfully" });
 });
 
 export default router;

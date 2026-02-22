@@ -1,23 +1,38 @@
-import express from 'express';
-import authMiddleware from '../middleware/auth.middleware.js';
-import Bot from '../models/Bot.model.js';
+import express from "express";
+import authMiddleware from "../middleware/auth.middleware.js";
+import Bot from "../models/Bot.model.js";
 
 const router = express.Router();
 
-// Create a new bot
-router.post('/', authMiddleware, async (req, res, next) => {
+/* ===============================
+   CREATE BOT
+================================ */
+router.post("/", authMiddleware, async (req, res, next) => {
     try {
         const { name, description, trainingData, language } = req.body;
-        const bot = new Bot({ name, description, trainingData, language, owner: req.user.id });
-        await bot.save();
+
+        if (!name || !language) {
+            return res.status(400).json({ message: "Name and language are required" });
+        }
+
+        const bot = await Bot.create({
+            name,
+            description,
+            trainingData,
+            language,
+            owner: req.user.id,
+        });
+
         res.status(201).json(bot);
     } catch (err) {
         next(err);
     }
 });
 
-// Get all bots for logged-in user
-router.get('/', authMiddleware, async (req, res, next) => {
+/* ===============================
+   GET ALL USER BOTS
+================================ */
+router.get("/", authMiddleware, async (req, res, next) => {
     try {
         const bots = await Bot.find({ owner: req.user.id }).sort({ createdAt: -1 });
         res.json(bots);
@@ -26,25 +41,42 @@ router.get('/', authMiddleware, async (req, res, next) => {
     }
 });
 
-// Update bot
-router.put('/:id', authMiddleware, async (req, res, next) => {
+/* ===============================
+   UPDATE BOT
+================================ */
+router.put("/:id", authMiddleware, async (req, res, next) => {
     try {
-        const bot = await Bot.findOneAndUpdate({ _id: req.params.id, owner: req.user.id }, req.body, {
-            new: true,
-        });
-        if (!bot) return res.status(404).json({ message: 'Bot not found' });
+        const bot = await Bot.findOneAndUpdate(
+            { _id: req.params.id, owner: req.user.id },
+            req.body,
+            { new: true }
+        );
+
+        if (!bot) {
+            return res.status(404).json({ message: "Bot not found" });
+        }
+
         res.json(bot);
     } catch (err) {
         next(err);
     }
 });
 
-// Delete bot
-router.delete('/:id', authMiddleware, async (req, res, next) => {
+/* ===============================
+   DELETE BOT
+================================ */
+router.delete("/:id", authMiddleware, async (req, res, next) => {
     try {
-        const bot = await Bot.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
-        if (!bot) return res.status(404).json({ message: 'Bot not found' });
-        res.json({ message: 'Bot deleted' });
+        const bot = await Bot.findOneAndDelete({
+            _id: req.params.id,
+            owner: req.user.id,
+        });
+
+        if (!bot) {
+            return res.status(404).json({ message: "Bot not found" });
+        }
+
+        res.json({ message: "Bot deleted successfully" });
     } catch (err) {
         next(err);
     }

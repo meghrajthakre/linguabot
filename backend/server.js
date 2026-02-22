@@ -1,5 +1,6 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
 import cors from 'cors';
 import cookieParser from "cookie-parser"; 
 
@@ -12,12 +13,10 @@ import botsRoutes from './routes/bots.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 
-dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 // Connect to MongoDB
 connectDB(process.env.MONGO_URI);
-
 // Middleware
 app.use(express.json()); // parse JSON body
 app.use(cookieParser());
