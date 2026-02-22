@@ -22,8 +22,24 @@ router.post('/register', async (req, res, next) => {
 router.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
+
         const result = await loginUser({ email, password });
-        res.json({ user: { id: result.user._id, email: result.user.email }, token: result.token });
+
+        // 🍪 Set JWT in HttpOnly cookie
+        res.cookie("token", result.token, {
+            httpOnly: true,        // JS access nahi kar sakta
+            secure: false,         // true in production (https)
+            sameSite: "lax",       // CSRF protection
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.json({
+            user: {
+                id: result.user._id,
+                email: result.user.email
+            }
+        });
+
     } catch (err) {
         next(err);
     }

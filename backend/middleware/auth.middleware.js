@@ -1,18 +1,19 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+const authMiddleware = (req, res, next) => {
+    const token = req.cookies.token;
 
-// Protect routes by verifying JWT token in Authorization header
-export default function authMiddleware(req, res, next) {
-    const auth = req.headers.authorization;
-    if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ message: 'Unauthorized' });
-    const token = auth.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = { id: decoded.id, email: decoded.email, role: decoded.role };
-        return next();
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
     } catch (err) {
-        return res.status(401).json({ message: 'Invalid or expired token' });
+        return res.status(401).json({ message: "Invalid token" });
     }
-}
+};
+
+export default authMiddleware;

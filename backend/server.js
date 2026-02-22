@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from "cookie-parser"; 
 
 import connectDB from './config/db.js';
 import rateLimiter from './middleware/rateLimiter.middleware.js';
@@ -14,15 +15,17 @@ import analyticsRoutes from './routes/analytics.routes.js';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
-
 // Connect to MongoDB
 connectDB(process.env.MONGO_URI);
 
 // Middleware
-app.use(cors()); // enable CORS
 app.use(express.json()); // parse JSON body
+app.use(cookieParser());
+app.use(cors({
+  origin: "http://localhost:5173", // frontend URL (React Vite)
+  credentials: true
+}));
 app.use(rateLimiter); // global rate limiter
-
 // Register routes
 app.use('/api/auth', authRoutes);
 app.use('/api/bots', botsRoutes);
