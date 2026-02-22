@@ -1,6 +1,7 @@
 import express from 'express';
 import { registerUser, loginUser } from '../services/auth.service.js';
 import { validateEmail, validatePassword } from '../utils/validators.js';
+import authMiddleware from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.post('/register', async (req, res, next) => {
 });
 
 // Login route
-router.post('/login', async (req, res, next) => {
+router.post('/login',authMiddleware, async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
