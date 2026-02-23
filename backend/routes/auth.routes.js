@@ -1,6 +1,7 @@
 import express from "express";
 import { registerUser, loginUser } from "../services/auth.service.js";
-
+import User from "../models/User.model.js";
+import jwt from "jsonwebtoken";
 const router = express.Router();
 
 /* ===============================
@@ -69,4 +70,24 @@ router.post("/logout", (req, res) => {
     res.json({ message: "Logged out successfully" });
 });
 
+
+// me
+
+router.get("/me", async (req, res) => {
+    try {
+        const token = req.cookies.token;
+
+        if (!token) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await User.findById(decoded.id).select("-password");
+
+        res.json({ user });
+    } catch (err) {
+        res.status(401).json({ message: "Invalid token" });
+    }
+});
 export default router;
