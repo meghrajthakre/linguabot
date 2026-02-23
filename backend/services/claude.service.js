@@ -1,33 +1,18 @@
-import axios from 'axios';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export async function generateResponse(prompt, context = '') {
-    const GROK_API_KEY = process.env.GROK_API_KEY;
-    const GROK_ENDPOINT = process.env.GROK_ENDPOINT || 'https://api.x.ai/v1/chat/completions';
+import dotenv from "dotenv";
+dotenv.config();
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-    if (!GROK_API_KEY) throw new Error('GROK_API_KEY not configured');
 
-    try {
-        const res = await axios.post(
-            GROK_ENDPOINT,
-            {
-                model: "grok-1",
-                messages: [
-                    { role: "system", content: context || "You are a helpful AI assistant." },
-                    { role: "user", content: prompt }
-                ],
-                max_tokens: 500
-            },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${GROK_API_KEY}`
-                }
-            }
-        );
 
-        return res?.data?.choices?.[0]?.message?.content || '';
+export async function generateResponse(prompt) {
+    const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+    });
 
-    } catch (err) {
-        throw new Error(`Grok API error: ${err.response?.data?.error || err.message}`);
-    }
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+
+    return response;
 }
