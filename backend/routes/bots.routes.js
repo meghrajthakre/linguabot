@@ -9,26 +9,58 @@ const router = express.Router();
 ================================ */
 router.post("/", authMiddleware, async (req, res, next) => {
     try {
-        const { name, description, trainingData, language } = req.body;
+        const {
+            name,
+            description,
+            language,
+            faqs = [],
+            pricing = [],
+            docs = "",
+        } = req.body;
 
         if (!name || !language) {
-            return res.status(400).json({ message: "Name and language are required" });
+            return res.status(400).json({
+                message: "Name and language are required",
+            });
         }
+
+        // Build contentChunks automatically (for AI context use)
+        const contentChunks = [
+            ...faqs.map(f => ({
+                type: "faq",
+                text: `Q: ${f.question}\nA: ${f.answer}`,
+            })),
+            ...pricing.map(p => ({
+                type: "pricing",
+                text: `${p.plan} - ${p.price} - ${p.features?.join(", ")}`,
+            })),
+            ...(docs
+                ? [{
+                    type: "doc",
+                    text: docs,
+                }]
+                : []),
+        ];
 
         const bot = await Bot.create({
             name,
             description,
-            trainingData,
             language,
+            faqs,
+            pricing,
+            docs,
+            contentChunks,
             owner: req.user.id,
         });
 
-        res.status(201).json(bot);
+        res.status(201).json({
+            success: true,
+            bot,
+        });
     } catch (err) {
         next(err);
     }
 });
-
 /* ===============================
    GET ALL USER BOTS
 ================================ */
@@ -44,19 +76,25 @@ router.get("/", authMiddleware, async (req, res, next) => {
 /* ===============================
    UPDATE BOT
 ================================ */
-router.put("/:id", authMiddleware, async (req, res, next) => {
+router.put("/:botId", authMiddleware, async (req, res, next) => {
     try {
-        const bot = await Bot.findOneAndUpdate(
-            { _id: req.params.id, owner: req.user.id },
-            req.body,
-            { new: true }
-        );
+        const bot = await Bot.findOne({
+            _id: req.params.botId,
+            owner: req.user.id,
+        });
 
         if (!bot) {
             return res.status(404).json({ message: "Bot not found" });
         }
 
-        res.json(bot);
+        Object.assign(bot, req.body);
+
+        await bot.save();
+
+        res.json({
+            success: true,
+            bot,
+        });
     } catch (err) {
         next(err);
     }
