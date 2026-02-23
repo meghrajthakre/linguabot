@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
+import CreateBot from "./pages/CreateBot";
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
             }
           >
             <Route path="/" element={<Dashboard />} />
+            <Route path="/create-bot" element={<CreateBot />} />
             <Route path="/bot" element={<BotEditor />} />
             <Route path="/analytics" element={<Analytics />} />
           </Route>
