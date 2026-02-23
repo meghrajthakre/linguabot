@@ -1,5 +1,6 @@
 import React from "react";
 import BotCard from "../components/BotCard";
+import CreateBotButton from "../components/CreateBotButton";
 
 const Dashboard = () => {
   return (
@@ -9,6 +10,7 @@ const Dashboard = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800">🤖 Your Bots</h1>
         <p className="text-gray-600">Manage and train your AI bots</p>
+        <CreateBotButton/>
       </div>
 
       {/* stats */}
