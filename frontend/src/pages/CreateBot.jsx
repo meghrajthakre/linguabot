@@ -103,7 +103,7 @@ const CreateBot = () => {
             <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate("/")}
                 className="px-5 py-2 rounded-xl border border-gray-300 hover:bg-gray-100"
               >
                 Cancel
