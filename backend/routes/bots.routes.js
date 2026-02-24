@@ -73,6 +73,23 @@ router.get("/", authMiddleware, async (req, res, next) => {
     }
 });
 
+
+router.get("/:botId", authMiddleware, async (req, res, next) => {
+    try {
+        const bot = await Bot.findOne({
+            _id: req.params.botId,
+            owner: req.user.id,
+        });
+
+        if (!bot) {
+            return res.status(404).json({ message: "Bot not found" });
+        }
+
+        res.json(bot);
+    } catch (err) {
+        next(err);
+    }
+});
 /* ===============================
    UPDATE BOT
 ================================ */

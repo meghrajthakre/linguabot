@@ -8,7 +8,7 @@ const Dashboard = () => {
   const [bots, setBots] = useState([]);
   const [loading, setLoading] = useState(true);
 
-const navigate = useNavigate();
+  const navigate = useNavigate();
   /* =========================
      FETCH USER BOTS
   ========================== */
@@ -103,13 +103,11 @@ const navigate = useNavigate();
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {bots.map((bot) => (
+          {bots.map(bot => (
             <BotCard
               key={bot._id}
-              title={bot.name}
-              description={bot.description}
-              language={bot.language}
-              onDelete={() => handleDelete(bot._id)}
+              bot={bot}
+              onDelete={handleDelete}
             />
           ))}
         </div>
