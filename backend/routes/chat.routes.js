@@ -12,6 +12,7 @@ router.post('/:botId', authMiddleware, async (req, res, next) => {
     try {
         const { botId } = req.params;
         const { message } = req.body;
+        console.log(`Received message for bot ${botId}:`, message);
 
         if (!message) {
             return res.status(400).json({ message: 'Message is required' });
@@ -32,13 +33,13 @@ router.post('/:botId', authMiddleware, async (req, res, next) => {
 
             FAQs:
             ${(bot.faqs || [])
-                            .map(f => `Q: ${f.question}\nA: ${f.answer}`)
-                            .join('\n')}
+                .map(f => `Q: ${f.question}\nA: ${f.answer}`)
+                .join('\n')}
 
             Pricing:
             ${(bot.pricing || [])
-                            .map(p => `${p.plan} - ${p.price} - ${p.features?.join(', ')}`)
-                            .join('\n')}
+                .map(p => `${p.plan} - ${p.price} - ${p.features?.join(', ')}`)
+                .join('\n')}
 
             Documentation:
             ${bot.docs || ''}
@@ -81,7 +82,8 @@ router.post('/:botId', authMiddleware, async (req, res, next) => {
         });
 
     } catch (err) {
-        next(err);
+        console.error("AI ERROR:", err.response?.data || err.message || err);
+        throw new Error("AI response failed");
     }
 });
 

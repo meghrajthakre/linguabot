@@ -11,12 +11,11 @@ const BotCard = ({ bot, onDelete }) => {
   };
 
   return (
-    <div className="group relative bg-white border border-gray-200 rounded-lg transition-all duration-300 hover:border-gray-300 hover:shadow-sm flex flex-col h-full">
+    <div className="group relative bg-white border border-gray-200 rounded-lg transition-all duration-300 hover:border-gray-300 hover:shadow-sm flex flex-col h-full ">
       
       {/* Top Accent Line */}
-      <div className="h-0.5 bg-yellow-400" />
 
-      <div className="p-8 flex flex-col flex-1">
+      <div className="p-8 flex flex-col flex-1  border-t-4 border-yellow-400 overflow-hidden rounded-tl-lg rounded-tr-lg">
         
         {/* Header with Icon */}
         <div className="flex items-start justify-between gap-4 mb-6">

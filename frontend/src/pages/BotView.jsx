@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axios";
-import { Send } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 import BackButton from "../components/BackButton";
 
 const BotView = () => {
@@ -84,96 +84,104 @@ const BotView = () => {
 
     if (!bot) return null;
 
-    return (
-        <div className="min-h-screen bg-[#F6F1E8] flex items-center justify-center p-6">
+  return (
+  <div className="h-90 mt-22 flex items-center justify-center p-4">
+    
+    <div className="w-full max-w-2xl h-[80vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-gray-100">
 
-            <div className="w-80 max-w-3xl h-[70vh] bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl shadow-xl flex flex-col">
+      {/* HEADER */}
+      <div className="px-6 py-4 border-b bg-white/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-10">
+        
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 flex items-center justify-center rounded-full bg-yellow-100 text-2xl shadow-sm">
+            🤖
+          </div>
 
-                {/* HEADER */}
-                {/* HEADER */}
-                <div className="p-5 border-b border-white/40 flex items-center justify-between">
-
-                    {/* Left Side */}
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-yellow-400/20 flex items-center justify-center text-lg">
-                            🤖
-                        </div>
-                        <div>
-                            <h2 className="font-semibold text-gray-800">
-                                {bot.name}
-                            </h2>
-                            <p className="text-xs text-gray-500">
-                                {bot.language?.toUpperCase()} AI Assistant
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Right Side Back Button */}
-                    <BackButton label="Back" />
-
-                </div>
-
-                {/* CHAT BODY */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-
-                    {messages.map((m, i) => (
-                        <div
-                            key={i}
-                            className={`flex ${m.from === "user" ? "justify-end" : ""}`}
-                        >
-                            <div
-                                className={`px-4 py-3 rounded-2xl text-sm max-w-[75%] shadow-sm
-                ${m.from === "user"
-                                        ? "bg-yellow-400 text-black rounded-br-sm"
-                                        : "bg-white/70 border border-white/40 text-gray-800 rounded-bl-sm"
-                                    }`}
-                            >
-                                {m.text}
-
-                                {m.time && (
-                                    <div className="text-[10px] text-gray-400 mt-1">
-                                        {m.time} ms
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-
-                    {/* Typing Indicator */}
-                    {loading && (
-                        <div className="flex">
-                            <div className="px-4 py-3 rounded-2xl bg-white/70 border border-white/40 text-gray-500 text-sm animate-pulse">
-                                Typing...
-                            </div>
-                        </div>
-                    )}
-
-                    <div ref={bottomRef} />
-                </div>
-
-                {/* INPUT */}
-                <div className="p-4 border-t border-white/40 flex gap-3">
-
-                    <input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                        placeholder="Type your message..."
-                        className="flex-1 px-4 py-3 rounded-xl bg-white/70 border border-white/40 focus:ring-2 focus:ring-yellow-300 outline-none text-sm"
-                    />
-
-                    <button
-                        onClick={sendMessage}
-                        disabled={loading}
-                        className="w-12 h-12 rounded-xl bg-yellow-400 hover:bg-yellow-500 flex items-center justify-center shadow-md transition"
-                    >
-                        <Send size={18} />
-                    </button>
-
-                </div>
-            </div>
+          <div>
+            <h1 className="font-semibold text-gray-900 text-lg">
+              {bot.name}
+            </h1>
+            <p className="text-xs text-gray-500">
+              {bot.language?.toUpperCase() || "EN"} • AI Assistant
+            </p>
+          </div>
         </div>
-    );
+
+          <BackButton />
+      </div>
+
+      {/* CHAT BODY */}
+      <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white to-gray-50">
+        <div className="p-6 space-y-6">
+
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-xs lg:max-w-md px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition
+                  ${
+                    m.from === "user"
+                      ? "bg-yellow-400 text-gray-900 rounded-br-md"
+                      : "bg-white border border-gray-200 text-gray-800 rounded-bl-md"
+                  }`}
+              >
+                {m.text}
+
+                {m.time && (
+                  <div className="text-xs text-gray-400 mt-2 text-right">
+                    {m.time} ms
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-white border border-gray-200 px-5 py-3 rounded-2xl text-sm shadow-sm flex gap-2 items-center">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300"></span>
+              </div>
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {/* INPUT */}
+      <div className="px-6 py-4 border-t bg-white">
+        <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-yellow-400 transition">
+          
+          <input
+            value={input}
+            autoFocus={true}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="Type your message..."
+            className="flex-1 bg-transparent outline-none text-sm px-2"
+          />
+
+          <button
+            onClick={sendMessage}
+            disabled={loading || !input.trim()}
+            className="w-10 h-10 rounded-lg bg-yellow-400 hover:bg-yellow-500 active:scale-95 flex items-center justify-center transition disabled:opacity-40"
+          >
+            <Send size={18} />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 };
 
 export default BotView;
