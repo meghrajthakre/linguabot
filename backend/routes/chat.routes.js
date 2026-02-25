@@ -7,66 +7,139 @@ import { translate } from '../services/lingo.service.js';
 import WebsiteData from "../models/websiteSchema.model.js";
 const router = express.Router();
 
-// POST /api/chat/:botId - send user message to the bot and store conversation
-router.post('/:botId', authMiddleware, async (req, res, next) => {
+router.post('/:botId', authMiddleware, async (req, res) => {
     try {
         const { botId } = req.params;
-        const { message } = req.body;
-        console.log(`Received message for bot ${botId}:`, message);
+        let { message } = req.body;
 
-        if (!message) {
-            return res.status(400).json({ message: 'Message is required' });
+
+        if (!message || message.trim().length === 0) {
+            return res.status(400).json({ message: "Message cannot be empty" });
         }
+
+        if (message.length > 2000) {
+            return res.status(400).json({ message: "Message too long" });
+        }
+
+        message = message.trim();
 
         const bot = await Bot.findById(botId);
         if (!bot) {
-            return res.status(404).json({ message: 'Bot not found' });
+            return res.status(404).json({ message: "Bot not found" });
         }
 
-        // 🌍 Translate to bot language if needed
-        const incoming = await translate(message, bot.language || 'en');
+        // ================================
+        // 👋 GREETING SHORTCUT
+        // ================================
 
-        // 🔥 Build Structured Website Context
-        const websiteContext = `
-            Website Name: ${bot.name}
-            Description: ${bot.description || ''}
+        const greetings = ["hi", "hello", "hey", "good morning", "good evening"];
+        if (greetings.includes(message.toLowerCase())) {
+            return res.json({
+                botId: bot._id,
+                aiResponse: `Hello! How can I help you regarding ${bot.name}?`,
+                responseTimeMs: 0
+            });
+        }
 
+        // ================================
+        // 🌍 TRANSLATE TO BOT LANGUAGE
+        // ================================
+
+        const incoming = await translate(message, bot.language || "en");
+
+        // ================================
+        // 🧠 INTENT DETECTION
+        // ================================
+
+        const lowerMsg = incoming.toLowerCase();
+
+        const isPricing = lowerMsg.includes("price") || lowerMsg.includes("plan");
+        const isFAQ = lowerMsg.includes("how") || lowerMsg.includes("what") || lowerMsg.includes("why");
+        const isDocs = lowerMsg.includes("documentation") || lowerMsg.includes("api");
+
+        // ================================
+        // 📦 SMART CONTEXT SELECTION (Mini RAG)
+        // ================================
+
+        let selectedContext = `
+Website Name: ${bot.name}
+Description: ${bot.description || "Not provided"}
+`;
+
+        if (isFAQ && bot.faqs?.length > 0) {
+            selectedContext += `
+FAQs:
+${bot.faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n\n")}
+`;
+        }
+
+        if (isPricing && bot.pricing?.length > 0) {
+            selectedContext += `
+Pricing:
+${bot.pricing.map(p =>
+                `${p.plan} - ${p.price} - ${(p.features || []).join(", ")}`
+            ).join("\n\n")}
+`;
+        }
+
+        if (isDocs && bot.docs) {
+            selectedContext += `
+                Documentation:
+                ${bot.docs}
+                `;
+        }
+
+        // If no section matched → send full compressed context
+        if (!isFAQ && !isPricing && !isDocs) {
+            selectedContext += `
             FAQs:
-            ${(bot.faqs || [])
-                .map(f => `Q: ${f.question}\nA: ${f.answer}`)
-                .join('\n')}
+            ${bot.faqs?.map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n\n") || "None"}
 
             Pricing:
-            ${(bot.pricing || [])
-                .map(p => `${p.plan} - ${p.price} - ${p.features?.join(', ')}`)
-                .join('\n')}
+            ${bot.pricing?.map(p =>
+                            `${p.plan} - ${p.price}`
+                        ).join("\n") || "None"}
 
             Documentation:
-            ${bot.docs || ''}
+            ${bot.docs || "None"}
             `;
+        }
+
+        // ================================
+        // 🧾 SYSTEM PROMPT
+        // ================================
 
         const systemPrompt = `
-        You are LinguaBot, a professional AI assistant for the website "${bot.name}".
+            You are LinguaBot, an AI assistant for "${bot.name}".
 
-        Rules:
-        - Give short responses (max 2-3 sentences).
-        - Be friendly and professional.
-        - Use only the provided website context.
-        - If answer is not found in context, say:
-        "I will connect you with our support team."
-        - Do not hallucinate.
-        - Do not give long explanations.
-        `;
+            Rules:
+            - Answer ONLY from provided website information.
+            - Keep responses short (max 3 sentences).
+            - Be professional and friendly.
+            - If answer is not found, say exactly:
+            "I will connect you with our support team."
+            - Never guess.
+            - Never hallucinate.
+            `;
+
+        // ================================
+        // 🤖 AI CALL
+        // ================================
 
         const start = Date.now();
 
         const aiResponse = await generateResponse(
             incoming,
-            websiteContext,
-            systemPrompt
+            selectedContext,
+            systemPrompt,
+            { temperature: 0.2 }
         );
 
         const responseTimeMs = Date.now() - start;
+
+        // ================================
+        // 💾 SAVE CONVERSATION
+        // ================================
 
         await Conversation.create({
             botId: bot._id,
@@ -75,15 +148,24 @@ router.post('/:botId', authMiddleware, async (req, res, next) => {
             responseTimeMs,
         });
 
+        // ================================
+        // 🌍 TRANSLATE BACK IF NEEDED
+        // ================================
+
+        const finalResponse =
+            bot.language && bot.language !== "en"
+                ? await translate(aiResponse, bot.language)
+                : aiResponse;
+
         res.json({
             botId: bot._id,
-            aiResponse,
+            aiResponse: finalResponse,
             responseTimeMs,
         });
 
     } catch (err) {
-        console.error("AI ERROR:", err.response?.data || err.message || err);
-        throw new Error("AI response failed");
+        console.error("AI ERROR:", err.message);
+        res.status(500).json({ message: "AI response failed" });
     }
 });
 
