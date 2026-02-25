@@ -11,11 +11,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import CreateBot from "./pages/CreateBot";
 import BotView from "./pages/BotView";
+import  { Toaster } from "react-hot-toast";
 
 const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Toaster position="top-right" reverseOrder={false} />
         <Routes>
 
           {/* Protected Layout */}

@@ -97,7 +97,9 @@ const Dashboard = () => {
       ) : bots.length === 0 ? (
         <div className="bg-white p-10 rounded-2xl shadow text-center">
           <p className="text-gray-500 mb-4">No bots created yet.</p>
-          <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-5 py-2 rounded-xl">
+          <button
+          onClick={() => navigate("/create-bot")}
+          className="bg-yellow-400 hover:bg-yellow-500 text-white px-5 py-2 rounded-xl">
             Create Your First Bot
           </button>
         </div>

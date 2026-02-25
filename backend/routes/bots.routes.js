@@ -94,27 +94,38 @@ router.get("/:botId", authMiddleware, async (req, res, next) => {
    UPDATE BOT
 ================================ */
 router.put("/:botId", authMiddleware, async (req, res, next) => {
-    try {
-        const bot = await Bot.findOne({
-            _id: req.params.botId,
-            owner: req.user.id,
-        });
+  try {
+    const bot = await Bot.findOne({
+      _id: req.params.botId,
+      owner: req.user.id,
+    });
 
-        if (!bot) {
-            return res.status(404).json({ message: "Bot not found" });
-        }
-
-        Object.assign(bot, req.body);
-
-        await bot.save();
-
-        res.json({
-            success: true,
-            bot,
-        });
-    } catch (err) {
-        next(err);
+    if (!bot) {
+      return res.status(404).json({ message: "Bot not found" });
     }
+
+    const { faqs = [], pricing = [], docs = "" } = req.body;
+
+    const contentChunks = [
+      ...faqs.map(f => ({
+        type: "faq",
+        text: `Q: ${f.question}\nA: ${f.answer}`,
+      })),
+      ...pricing.map(p => ({
+        type: "pricing",
+        text: `${p.plan} - ${p.price} - ${p.features?.join(", ")}`,
+      })),
+      ...(docs ? [{ type: "doc", text: docs }] : []),
+    ];
+
+    Object.assign(bot, req.body, { contentChunks });
+
+    await bot.save();
+
+    res.json({ success: true, bot });
+  } catch (err) {
+    next(err);
+  }
 });
 
 /* ===============================

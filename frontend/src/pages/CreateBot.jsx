@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bot, Plus, Trash2, ChevronDown, Sparkles, FileText, DollarSign, HelpCircle, RotateCcw, Send } from "lucide-react";
 import api from "../api/axios";
+import toast from "react-hot-toast";
 
 /* ─── tiny helper ─── */
 const Section = ({ icon: Icon, label, color, children }) => (
@@ -120,10 +121,9 @@ const CreateBot = () => {
         docs: formData.docs.trim(),
       };
 
-      console.log("Sending Payload:", payload);
 
       await api.post("/bots", payload);
-
+      toast.success("Bot created successfully ");
       navigate("/");
     } catch (error) {
       console.error("Bot Create Error:", error.response?.data || error);

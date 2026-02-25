@@ -1,184 +1,227 @@
-import React, { useState } from "react";
-import TrainingPanel from "../components/TrainingPanel";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
+import { Save, Plus, Trash2 } from "lucide-react";
+import api from "../api/axios";
 
-
-
-const SectionCard = ({ icon, title, subtitle, children, action }) => (
-  <div className="bg-white border border-[#e8e0d0] rounded-2xl p-5 flex flex-col gap-4 shadow-sm hover:shadow-md transition">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-200 flex items-center justify-center text-lg">
-          {icon}
-        </div>
-        <div>
-          <h2 className="text-sm font-bold text-gray-900">{title}</h2>
-          <p className="text-xs text-gray-400">{subtitle}</p>
-        </div>
-      </div>
-      {action}
-    </div>
-    {children}
-  </div>
-);
-
-/* ───────────────────────────────────────────── */
-/* Chat Preview */
-/* ───────────────────────────────────────────── */
-
-const ChatPreview = () => {
-  const initialMessages = [
-    { from: "bot", text: "Hi! I'm your AI assistant 👋" },
-    { from: "user", text: "What's your return policy?" },
-    { from: "bot", text: "We offer 30-day hassle-free returns." },
-  ];
-
-  const [messages, setMessages] = useState(initialMessages);
-  const [input, setInput] = useState("");
-
-  const send = () => {
-    if (!input.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { from: "user", text: input },
-      { from: "bot", text: "Processing your request..." },
-    ]);
-    setInput("");
-  };
-
-  const reset = () => setMessages(initialMessages);
-
-  return (
-    <>
-      <div className="flex flex-col gap-3 min-h-[220px] max-h-[260px] overflow-y-auto pr-1">
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`flex ${m.from === "user" ? "justify-end" : ""}`}
-          >
-            <div
-              className={`px-4 py-2.5 text-sm rounded-2xl max-w-[75%] transition
-                ${
-                  m.from === "user"
-                    ? "bg-yellow-400 text-black rounded-br-sm"
-                    : "bg-[#f5f0e8] border border-[#e8e0d0] text-gray-800 rounded-bl-sm"
-                }`}
-            >
-              {m.text}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex gap-2 mt-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          className="flex-1 border border-[#e8e0d0] rounded-xl px-4 py-2 text-sm bg-[#f5f0e8] focus:ring-2 focus:ring-yellow-300 outline-none"
-          placeholder="Test your bot..."
-        />
-        <button
-          onClick={send}
-          className="w-10 h-10 rounded-xl bg-yellow-400 hover:bg-yellow-500 font-bold shadow-sm hover:shadow-md transition"
-        >
-          ➤
-        </button>
-      </div>
-
-      <button
-        onClick={reset}
-        className="text-xs text-gray-400 hover:text-gray-600 mt-2 self-end"
-      >
-        Reset Chat
-      </button>
-    </>
-  );
-};
-
-/* ───────────────────────────────────────────── */
-/* Main Editor */
-/* ───────────────────────────────────────────── */
+const inputCls =
+  "w-full border border-[#e8e0d0] bg-[#fdf9f3] rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400 outline-none transition";
 
 const BotEditor = () => {
-  const [botName, setBotName] = useState("Support Bot");
+  const { id } = useParams();
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    language: "English",
+    faqs: [],
+    pricing: [],
+    docs: "",
+  });
+
+  /* ================= FETCH BOT ================= */
+  useEffect(() => {
+    const fetchBot = async () => {
+      try {
+        const { data } = await api.get(`/bots/${id}`);
+        setFormData({
+          name: data.name || "",
+          description: data.description || "",
+          language: data.language || "English",
+          faqs: data.faqs || [],
+          pricing: data.pricing || [],
+          docs: data.docs || "",
+        });
+      } catch (err) {
+        toast.error("Failed to load bot ❌");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBot();
+  }, [id]);
+
+  /* ================= FAQ HANDLERS ================= */
+  const addFaq = () =>
+    setFormData(prev => ({
+      ...prev,
+      faqs: [...prev.faqs, { question: "", answer: "" }]
+    }));
+
+  const updateFaq = (i, field, value) => {
+    const updated = [...formData.faqs];
+    updated[i][field] = value;
+    setFormData({ ...formData, faqs: updated });
+  };
+
+  const removeFaq = (i) => {
+    const updated = formData.faqs.filter((_, idx) => idx !== i);
+    setFormData({ ...formData, faqs: updated });
+  };
+
+  /* ================= SAVE ================= */
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await api.put(`/bots/${id}`, formData);
+      toast.success("Bot updated successfully 🚀");
+    } catch {
+      toast.error("Update failed ❌");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f0e8]">
+        <div className="animate-spin w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#f5f0e8]">
+    <div className="min-h-screen bg-[#f5f0e8] px-4 py-8">
+      <div className="max-w-6xl mx-auto space-y-8">
 
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
-
-        {/* Top Bar */}
-        <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900">
               ⚙️ Bot Editor
             </h1>
-            <p className="text-sm text-gray-500">
-              Train and customize your AI assistant
+            <p className="text-sm text-gray-400">
+              Customize your AI assistant
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 px-6 py-2.5 rounded-xl font-semibold shadow-sm transition disabled:opacity-50"
+          >
+            {saving ? (
+              <span className="w-4 h-4 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
+            ) : (
+              <Save size={16} />
+            )}
+            Save Changes
+          </button>
+        </div>
+
+        {/* BASIC INFO CARD */}
+        <div className="bg-white border border-[#e8e0d0] rounded-2xl p-6 shadow-sm space-y-5">
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            Basic Info
+          </h2>
+
+          <div className="space-y-4">
             <input
-              value={botName}
-              onChange={(e) => setBotName(e.target.value)}
-              className="border border-[#e8e0d0] rounded-lg px-3 py-1.5 text-sm font-bold bg-[#f5f0e8] focus:ring-2 focus:ring-yellow-300 outline-none"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              placeholder="Bot Name"
+              className={inputCls}
             />
-            <button className="bg-yellow-400 hover:bg-yellow-500 px-5 py-2 rounded-xl font-bold shadow-sm hover:shadow-md transition">
-              Save Changes
+
+            <textarea
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              placeholder="Bot Description"
+              rows={3}
+              className={`${inputCls} resize-none`}
+            />
+
+            <select
+              value={formData.language}
+              onChange={(e) =>
+                setFormData({ ...formData, language: e.target.value })
+              }
+              className={inputCls}
+            >
+              <option>English</option>
+              <option>Hindi</option>
+              <option>Spanish</option>
+              <option>French</option>
+              <option>German</option>
+              <option>Portuguese</option>
+              <option>Arabic</option>
+              <option>Japanese</option>
+              <option>Chinese</option>
+              <option>Korean</option>
+              <option>Russian</option>
+            </select>
+          </div>
+        </div>
+
+        {/* FAQ SECTION */}
+        <div className="bg-white border border-[#e8e0d0] rounded-2xl p-6 shadow-sm space-y-5">
+          <div className="flex justify-between items-center">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              FAQs
+            </h2>
+
+            <button
+              onClick={addFaq}
+              className="flex items-center gap-2 text-sm text-yellow-700 hover:text-yellow-800 font-medium"
+            >
+              <Plus size={14} />
+              Add FAQ
             </button>
           </div>
-        </div>
 
+          <div className="space-y-4">
+            {formData.faqs.map((faq, i) => (
+              <div
+                key={i}
+                className="bg-[#fdf9f3] border border-[#e8e0d0] rounded-xl p-4 space-y-3 transition hover:shadow-sm"
+              >
+                <input
+                  value={faq.question}
+                  onChange={(e) =>
+                    updateFaq(i, "question", e.target.value)
+                  }
+                  placeholder="Question"
+                  className={inputCls}
+                />
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <textarea
+                  value={faq.answer}
+                  onChange={(e) =>
+                    updateFaq(i, "answer", e.target.value)
+                  }
+                  placeholder="Answer"
+                  rows={2}
+                  className={`${inputCls} resize-none`}
+                />
 
-          {/* Training */}
-          <SectionCard
-            icon="📚"
-            title="Training Data"
-            subtitle="FAQs • Pricing • Docs"
-            action={
-              <span className="text-xs bg-[#f5f0e8] border border-[#e8e0d0] px-3 py-1 rounded-full">
-                25 entries
-              </span>
-            }
-          >
-            <TrainingPanel />
-          </SectionCard>
-
-          {/* Right Column */}
-          <div className="flex flex-col gap-6 lg:sticky lg:top-6 h-fit">
-
-            <SectionCard
-              icon="🤖"
-              title="Live Preview"
-              subtitle="Test how your bot responds"
-            >
-              <ChatPreview />
-            </SectionCard>
-
-            <SectionCard
-              icon="🎛️"
-              title="Quick Settings"
-              subtitle="Personality & behavior"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <select className="border border-[#e8e0d0] rounded-lg px-3 py-2 text-sm bg-[#f5f0e8] focus:ring-2 focus:ring-yellow-300 outline-none">
-                  <option>Friendly</option>
-                  <option>Professional</option>
-                </select>
-                <select className="border border-[#e8e0d0] rounded-lg px-3 py-2 text-sm bg-[#f5f0e8] focus:ring-2 focus:ring-yellow-300 outline-none">
-                  <option>English</option>
-                  <option>Hindi</option>
-                </select>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => removeFaq(i)}
+                    className="text-red-500 hover:text-red-600 text-sm flex items-center gap-1"
+                  >
+                    <Trash2 size={14} />
+                    Remove
+                  </button>
+                </div>
               </div>
-            </SectionCard>
+            ))}
 
+            {formData.faqs.length === 0 && (
+              <div className="text-sm text-gray-400 text-center py-6 border border-dashed border-[#e8e0d0] rounded-xl">
+                No FAQs added yet
+              </div>
+            )}
           </div>
         </div>
+
       </div>
     </div>
   );
