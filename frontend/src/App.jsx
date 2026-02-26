@@ -14,6 +14,7 @@ import BotView from "./pages/BotView";
 import { Toaster } from "react-hot-toast";
 import NotFound from "./components/NotFound";
 import HowToMakeBot from "./pages/Howtomakebotguide";
+import Footer from "./pages/Footer";
 
 const App = () => {
   return (
@@ -45,6 +46,7 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
 
         </Routes>
+        <Footer />
       </AuthProvider>
     </BrowserRouter>
   );
