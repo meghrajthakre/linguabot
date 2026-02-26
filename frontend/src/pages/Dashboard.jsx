@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import BotCard from "../components/BotCard";
 import api from "../api/axios"; // <-- your axios instance
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [bots, setBots] = useState([]);
@@ -51,6 +51,7 @@ const Dashboard = () => {
           <p className="text-gray-500 mt-1">
             Manage, monitor and train your AI bots
           </p>
+          <Link to="/how-to-make-bot">How to Make Bot</Link>
         </div>
 
         <button

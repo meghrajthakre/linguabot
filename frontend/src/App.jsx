@@ -12,6 +12,8 @@ import { AuthProvider } from "./context/AuthContext";
 import CreateBot from "./pages/CreateBot";
 import BotView from "./pages/BotView";
 import { Toaster } from "react-hot-toast";
+import NotFound from "./components/NotFound";
+import HowToMakeBot from "./pages/Howtomakebotguide";
 
 const App = () => {
   return (
@@ -34,11 +36,13 @@ const App = () => {
             <Route path="/bot/:id/edit" element={<BotEditor />} />
             <Route path="/bot/:id/analytics" element={<Analytics />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/how-to-make-bot" element={<HowToMakeBot />} />
           </Route>
 
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="*" element={<NotFound />} />
 
         </Routes>
       </AuthProvider>
