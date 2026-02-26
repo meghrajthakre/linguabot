@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import ConfirmationModal from "../components/Confirmationmodal";
+import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Save, Plus, Trash2, AlertCircle, CheckCircle } from "lucide-react";
+import { Save, Plus, Trash2, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
 import api from "../api/axios";
 
 const inputCls =
@@ -14,7 +15,7 @@ const BotEditor = () => {
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [errors, setErrors] = useState({});
-
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -25,6 +26,16 @@ const BotEditor = () => {
   });
 
   const [initialData, setInitialData] = useState(null);
+
+  const [confirmConfig, setConfirmConfig] = useState(null);
+
+  const openConfirmModal = (config) => {
+    setConfirmConfig(config);
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmConfig(null);
+  };
 
   /* ================= FETCH BOT ================= */
   useEffect(() => {
@@ -153,7 +164,8 @@ const BotEditor = () => {
       setSaving(true);
       await api.put(`/bots/${id}`, formData);
       setInitialData(formData);
-      toast.success("Bot updated successfully 🚀");
+      toast.success("Bot updated successfully ");
+      navigate('/')
     } catch {
       toast.error("Update failed ❌");
     } finally {
@@ -162,11 +174,22 @@ const BotEditor = () => {
   };
 
   const handleDiscard = () => {
-    if (window.confirm("Discard unsaved changes?")) {
-      setFormData(initialData);
-      setErrors({});
-    }
+    openConfirmModal({
+      title: "Discard Changes?",
+      message:
+        "You have unsaved changes. Are you sure you want to discard them?",
+      type: "warning",
+      confirmText: "Discard",
+      cancelText: "Keep Editing",
+      onConfirm: () => {
+        setFormData(initialData);   // 🔥 restore original data
+        closeConfirmModal();
+        toast.success("Changes discarded");
+      },
+      onCancel: closeConfirmModal,
+    });
   };
+
 
   if (loading) {
     return (
@@ -181,7 +204,22 @@ const BotEditor = () => {
 
   return (
     <div className="min-h-screen px-4 py-8">
+      {/* BACK BUTTON */}
+        <div className="flex items-center justify-between mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition group"
+          >
+            <ArrowLeft
+              size={16}
+              className="transition-transform group-hover:-translate-x-1"
+            />
+            Back
+          </button>
+        </div>
       <div className="max-w-4xl mx-auto space-y-8">
+        
+
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -190,7 +228,7 @@ const BotEditor = () => {
               Customize your AI assistant with all the details
             </p>
           </div>
-
+      
           <div className="flex gap-2">
             {hasUnsavedChanges && (
               <button
@@ -531,8 +569,21 @@ const BotEditor = () => {
           </button>
         </div>
       </div>
+      {confirmConfig && (
+        <ConfirmationModal
+          isOpen={true}
+          title={confirmConfig.title}
+          message={confirmConfig.message}
+          type={confirmConfig.type}
+          confirmText={confirmConfig.confirmText}
+          cancelText={confirmConfig.cancelText}
+          onConfirm={confirmConfig.onConfirm}
+          onCancel={confirmConfig.onCancel}
+        />
+      )}
     </div>
   );
+
 };
 
 export default BotEditor;
