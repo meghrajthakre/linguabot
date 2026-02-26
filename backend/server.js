@@ -24,7 +24,7 @@ app.use(cors({
   origin: "http://localhost:5173", // frontend URL (React Vite)
   credentials: true
 }));
-app.use(rateLimiter); // global rate limiter
+// app.use(rateLimiter); // global rate limiter
 // Register routes
 app.use('/api/auth', authRoutes);
 app.use('/api/bots', botsRoutes);

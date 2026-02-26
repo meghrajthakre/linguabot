@@ -43,7 +43,7 @@ const Navbar = () => {
           ${mobile ? "w-full" : ""}
           ${
             active
-              ? "bg-yellow-100 text-yellow-700"
+              ? "bg-yellow-400 text-white-500"
               : "text-gray-600 hover:text-yellow-600 hover:bg-yellow-50"
           }
         `}
