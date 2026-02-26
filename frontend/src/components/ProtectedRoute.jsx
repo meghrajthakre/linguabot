@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoader(false);
-    }, 2000); // 👈 2 seconds minimum loader
+    }, 1000); // 👈 2 seconds minimum loader
 
     return () => clearTimeout(timer);
   }, []);
