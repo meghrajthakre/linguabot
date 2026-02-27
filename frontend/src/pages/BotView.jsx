@@ -33,12 +33,7 @@ const BotView = () => {
         fetchBot();
     }, [id]);
 
-    /* ===============================
-       AUTO SCROLL
-    ============================== */
-    useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+    
 
     /* ===============================
        SEND MESSAGE

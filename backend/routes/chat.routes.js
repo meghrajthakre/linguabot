@@ -1,19 +1,19 @@
-import express from 'express';
-import authMiddleware from '../middleware/auth.middleware.js';
-import Bot from '../models/Bot.model.js';
-import Conversation from '../models/Conversation.model.js';
-import { generateResponse } from '../services/claude.service.js';
-import { translate } from '../services/lingo.service.js';
-import WebsiteData from "../models/websiteSchema.model.js";
+import express from "express";
+import authMiddleware from "../middleware/auth.middleware.js";
+import Bot from "../models/Bot.model.js";
+import Conversation from "../models/Conversation.model.js";
+import { generateResponse } from "../services/claude.service.js";
+
 const router = express.Router();
 
-router.post('/:botId', authMiddleware, async (req, res) => {
+router.post("/:botId", authMiddleware, async (req, res) => {
+    const startTime = Date.now();
+
     try {
         const { botId } = req.params;
         let { message } = req.body;
 
-
-        if (!message || message.trim().length === 0) {
+        if (!message?.trim()) {
             return res.status(400).json({ message: "Message cannot be empty" });
         }
 
@@ -21,125 +21,92 @@ router.post('/:botId', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: "Message too long" });
         }
 
-        message = message.trim();
-
         const bot = await Bot.findById(botId);
         if (!bot) {
             return res.status(404).json({ message: "Bot not found" });
         }
 
-        // ================================
-        // 👋 GREETING SHORTCUT
-        // ================================
+        message = message.trim();
 
-        const greetings = ["hi", "hello", "hey", "good morning", "good evening"];
-        if (greetings.includes(message.toLowerCase())) {
-            return res.json({
-                botId: bot._id,
-                aiResponse: `Hello! How can I help you regarding ${bot.name}?`,
-                responseTimeMs: 0
-            });
-        }
-
-        // ================================
-        // 🌍 TRANSLATE TO BOT LANGUAGE
-        // ================================
-
-        const incoming = await translate(message, bot.language || "en");
-
-        // ================================
+        // ============================
         // 🧠 INTENT DETECTION
-        // ================================
+        // ============================
 
-        const lowerMsg = incoming.toLowerCase();
+        const lowerMsg = message.toLowerCase();
 
-        const isPricing = lowerMsg.includes("price") || lowerMsg.includes("plan");
-        const isFAQ = lowerMsg.includes("how") || lowerMsg.includes("what") || lowerMsg.includes("why");
-        const isDocs = lowerMsg.includes("documentation") || lowerMsg.includes("api");
+        const isPricing = /price|plan|cost|subscription/.test(lowerMsg);
+        const isFAQ = /how|what|why|when|where/.test(lowerMsg);
+        const isDocs = /documentation|api|integration|setup/.test(lowerMsg);
 
-        // ================================
-        // 📦 SMART CONTEXT SELECTION (Mini RAG)
-        // ================================
+        // ============================
+        // 📦 CONTEXT BUILDER
+        // ============================
 
-        let selectedContext = `
+        let context = `
 Website Name: ${bot.name}
 Description: ${bot.description || "Not provided"}
 `;
 
-        if (isFAQ && bot.faqs?.length > 0) {
-            selectedContext += `
+        if (isFAQ && bot.faqs?.length) {
+            context += `
 FAQs:
-${bot.faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n\n")}
+${bot.faqs
+                    .map((f) => `Q: ${f.question}\nA: ${f.answer}`)
+                    .join("\n\n")}
 `;
         }
 
-        if (isPricing && bot.pricing?.length > 0) {
-            selectedContext += `
+        if (isPricing && bot.pricing?.length) {
+            context += `
 Pricing:
-${bot.pricing.map(p =>
-                `${p.plan} - ${p.price} - ${(p.features || []).join(", ")}`
-            ).join("\n\n")}
+${bot.pricing.map((p) => `${p.plan} - ${p.price}`).join("\n")}
 `;
         }
 
         if (isDocs && bot.docs) {
-            selectedContext += `
-                Documentation:
-                ${bot.docs}
-                `;
+            context += `
+Documentation:
+${bot.docs}
+`;
         }
 
-        // If no section matched → send full compressed context
-        if (!isFAQ && !isPricing && !isDocs) {
-            selectedContext += `
-            FAQs:
-            ${bot.faqs?.map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n\n") || "None"}
-
-            Pricing:
-            ${bot.pricing?.map(p =>
-                            `${p.plan} - ${p.price}`
-                        ).join("\n") || "None"}
-
-            Documentation:
-            ${bot.docs || "None"}
-            `;
-        }
-
-        // ================================
-        // 🧾 SYSTEM PROMPT
-        // ================================
+        // ============================
+        // 🎯 SYSTEM PROMPT (Clean)
+        // ============================
 
         const systemPrompt = `
-            You are LinguaBot, an AI assistant for "${bot.name}".
+            You are the official AI assistant for "${bot.name}".
 
-            Rules:
-            - Answer ONLY from provided website information.
-            - Keep responses short (max 3 sentences).
-            - Be professional and friendly.
-            - If answer is not found, say exactly:
+            STRICT RULES:
+
+            1. You MUST respond ONLY in this language: ${bot.language}.
+            2. Use ONLY the provided website context.
+            3. Maximum 3 short sentences.
+            4. Be clear, helpful, and professional.
+            5. If the answer is NOT found in context, respond EXACTLY with:
             "I will connect you with our support team."
-            - Never guess.
-            - Never hallucinate.
-            `;
+            6. Do NOT hallucinate.
+            7. Do NOT add extra information.
+            8. Do NOT translate the website name.
 
-        // ================================
-        // 🤖 AI CALL
-        // ================================
+            Respond naturally in ${bot.language}.
+`;
 
-        const start = Date.now();
+        // ============================
+        // 🤖 GEMINI CALL
+        // ============================
 
         const aiResponse = await generateResponse(
-            incoming,
-            selectedContext,
+            message,
+            context,
             systemPrompt,
-            { temperature: 0.2 }
+            {
+                temperature: 0.2,
+                maxOutputTokens: 150,
+            }
         );
 
-        const responseTimeMs = Date.now() - start;
-
-        // ================================
-        // 💾 SAVE CONVERSATION
-        // ================================
+        const responseTimeMs = Date.now() - startTime;
 
         await Conversation.create({
             botId: bot._id,
@@ -148,38 +115,15 @@ ${bot.pricing.map(p =>
             responseTimeMs,
         });
 
-        // ================================
-        // 🌍 TRANSLATE BACK IF NEEDED
-        // ================================
-
-        const finalResponse =
-            bot.language && bot.language !== "en"
-                ? await translate(aiResponse, bot.language)
-                : aiResponse;
-
         res.json({
             botId: bot._id,
-            aiResponse: finalResponse,
+            aiResponse,
             responseTimeMs,
         });
 
     } catch (err) {
-        console.error("AI ERROR:", err.message);
+        console.error("❌ AI ERROR:", err);
         res.status(500).json({ message: "AI response failed" });
-    }
-});
-
-// train bot with new data
-router.post("/train", authMiddleware, async (req, res) => {
-    try {
-        const data = await WebsiteData.create(req.body);
-        res.status(201).json({
-            success: true,
-            message: "Bot trained successfully",
-            data,
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
     }
 });
 
