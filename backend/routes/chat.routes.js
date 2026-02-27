@@ -43,31 +43,31 @@ router.post("/:botId", authMiddleware, async (req, res) => {
         // ============================
 
         let context = `
-Website Name: ${bot.name}
-Description: ${bot.description || "Not provided"}
-`;
+                Website Name: ${bot.name}
+                Description: ${bot.description || "Not provided"}
+                `;
 
-        if (isFAQ && bot.faqs?.length) {
-            context += `
-FAQs:
-${bot.faqs
-                    .map((f) => `Q: ${f.question}\nA: ${f.answer}`)
-                    .join("\n\n")}
-`;
-        }
+                        if (isFAQ && bot.faqs?.length) {
+                            context += `
+                FAQs:
+                ${bot.faqs
+                                    .map((f) => `Q: ${f.question}\nA: ${f.answer}`)
+                                    .join("\n\n")}
+                `;
+                        }
 
-        if (isPricing && bot.pricing?.length) {
-            context += `
-Pricing:
-${bot.pricing.map((p) => `${p.plan} - ${p.price}`).join("\n")}
-`;
-        }
+                        if (isPricing && bot.pricing?.length) {
+                            context += `
+                Pricing:
+                ${bot.pricing.map((p) => `${p.plan} - ${p.price}`).join("\n")}
+                `;
+                        }
 
-        if (isDocs && bot.docs) {
-            context += `
-Documentation:
-${bot.docs}
-`;
+                        if (isDocs && bot.docs) {
+                            context += `
+                Documentation:
+                ${bot.docs}
+                `;
         }
 
         // ============================
