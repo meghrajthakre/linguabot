@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Copy, Check, KeyRound, Code } from "lucide-react";
+import toast from "react-hot-toast";
 
 const EmbedSection = ({ bot }) => {
   const [copied, setCopied] = useState(false);
@@ -14,6 +15,7 @@ const EmbedSection = ({ bot }) => {
   const handleCopy = () => {
     navigator.clipboard.writeText(embedCode);
     setCopied(true);
+     toast.success("Embed code copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
