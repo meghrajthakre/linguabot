@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Edit3, BarChart3, Trash2, ArrowRight, MoreVertical, Bot, CheckCircle, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import ConfirmationModal from "./Confirmationmodal";
+import EmbedSection from "./EmbedSection";
 
 const BotCard = ({ bot, onDelete }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -133,6 +134,7 @@ const BotCard = ({ bot, onDelete }) => {
           <p className="text-sm text-gray-600 line-clamp-2 flex-1">
             {bot.description || "No description provided"}
           </p>
+          <EmbedSection bot={bot} />
 
           {/* Meta Info */}
           <div className="space-y-3 pt-2 border-t border-gray-100">
