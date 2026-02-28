@@ -12,7 +12,6 @@ const BotView = () => {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const bottomRef = useRef(null);
 
     /* ===============================
        FETCH BOT INFO
@@ -143,7 +142,6 @@ const BotView = () => {
             </div>
           )}
 
-          <div ref={bottomRef} />
         </div>
       </div>
 
