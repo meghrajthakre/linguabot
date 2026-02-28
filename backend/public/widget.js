@@ -5,249 +5,264 @@
     return;
   }
 
-  /* =============================
-     CONFIGURATION
-  ==============================*/
   const DEFAULTS = {
-    autoPopupDelay: 5000, // Show popup after 5 seconds
-    typingSpeed: 50, // ms per character for streaming
-    storageKey: 'linguabot_history',
-    storageTheme: 'linguabot_theme'
+    autoPopupDelay: 5000,
+    typingSpeed: 30,
+    storageKey: "linguabot_history",
+    storageTheme: "linguabot_theme",
+    enableTypingSound: true,
+    enableTimestamps: true,
+    maxMessages: 100
   };
 
-  /* =============================
-     STYLE - PREMIUM LIGHT THEME
-  ==============================*/
+  /* ================= AUDIO SETUP ================= */
+  const AudioManager = {
+    context: null,
+    enabled: DEFAULTS.enableTypingSound,
+
+    init() {
+      try {
+        this.context = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        console.warn("Web Audio API not supported");
+        this.enabled = false;
+      }
+    },
+
+    playTypingSound() {
+      if (!this.enabled || !this.context) return;
+      try {
+        const now = this.context.currentTime;
+        const osc = this.context.createOscillator();
+        const gain = this.context.createGain();
+        osc.connect(gain);
+        gain.connect(this.context.destination);
+        osc.frequency.value = 800 + Math.random() * 200;
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } catch (e) {
+        // Silent fail
+      }
+    }
+  };
+
+  /* ================= SVG ICON ================= */
+  const SVG_ICON = `
+   <svg 
+  viewBox="0 0 24 24" 
+  width="28" 
+  height="28" 
+  fill="none" 
+  stroke="currentColor" 
+  stroke-width="1.8"
+  stroke-linecap="round" 
+  stroke-linejoin="round"
+  class="chat-icon"
+>
+  <path d="M4 5a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9l-5 4V5z"/>
+  
+  <circle cx="9" cy="10" r="1.2">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" repeatCount="indefinite"/>
+  </circle>
+  
+  <circle cx="12" cy="10" r="1.2">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <circle cx="15" cy="10" r="1.2">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.4s" repeatCount="indefinite"/>
+  </circle>
+</svg>
+  `;
+
+  /* ================= LOAD REMIX ICON ================= */
+  if (!document.querySelector('link[href*="remixicon"]')) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href =
+      "https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css";
+    document.head.appendChild(link);
+  }
+
+  /* ================= STYLES ================= */
   const style = document.createElement("style");
   style.innerHTML = `
     * {
-      margin: 0;
-      padding: 0;
       box-sizing: border-box;
     }
+.chat-toggle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(99,102,241,0.4);
+  cursor: pointer;
+  transition: 0.3s ease;
+}
 
-    /* Dark Mode Styles */
-    body.lb-dark-mode .lb-button {
-      background: #1f2937;
-      border-color: #374151;
-      color: #f3f4f6;
-    }
-
-    body.lb-dark-mode .lb-button:hover {
-      background: #374151;
-    }
-
-    body.lb-dark-mode .lb-chatbox {
-      background: #111827;
-      border-color: #374151;
-    }
-
-    body.lb-dark-mode .lb-header {
-      background: #1f2937;
-      color: #f3f4f6;
-      border-bottom-color: #374151;
-    }
-
-    body.lb-dark-mode .lb-header-info h3 {
-      color: #f3f4f6;
-    }
-
-    body.lb-dark-mode .lb-header-info p {
-      color: #9ca3af;
-    }
-
-    body.lb-dark-mode .lb-messages {
-      background: #111827;
-    }
-
-    body.lb-dark-mode .lb-message.user {
-      background: #374151;
-      color: #f3f4f6;
-      border-color: #4b5563;
-    }
-
-    body.lb-dark-mode .lb-message.bot {
-      background: #1f2937;
-      color: #e5e7eb;
-      border-color: #374151;
-    }
-
-    body.lb-dark-mode .lb-typing {
-      background: #1f2937;
-      border-color: #374151;
-    }
-
-    body.lb-dark-mode .lb-input-wrapper {
-      background: #1f2937;
-      border-top-color: #374151;
-    }
-
-    body.lb-dark-mode .lb-input {
-      background: #111827;
-      color: #f3f4f6;
-      border-color: #374151;
-    }
-
-    body.lb-dark-mode .lb-input:focus {
-      border-color: #fbbf24;
-      background: #1f2937;
-      box-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
-    }
-
-    body.lb-dark-mode .lb-send-btn {
-      background: #fbbf24;
-      color: #1f1f1f;
-    }
-
-    body.lb-dark-mode .lb-send-btn:hover {
-      background: #f59e0b;
-    }
-
-    body.lb-dark-mode .lb-theme-toggle {
-      color: #9ca3af;
-    }
-
-    /* Light Mode (Default) */
+.chat-toggle:hover {
+  transform: scale(1.1);
+}
     .lb-button {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      width: 64px;
-      height: 64px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
       background: #f5f1e8;
-      color: #1f1f1f;
       border: 2px solid #e8dcc8;
-      cursor: pointer;
-      z-index: 9998;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-      transition: all 0.3s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0;
+      cursor: pointer;
+      z-index: 9999;
+      transition: all 0.3s ease;
+      font-size: 20px;
+      color: #2d2d2d;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .lb-button:hover {
       transform: scale(1.1);
-      background: #f0e8d8;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
 
-    .lb-button.active {
-      background: #f0e8d8;
+    .lb-button:active {
+      transform: scale(0.95);
     }
 
-    .lb-button svg {
-      width: 28px;
-      height: 28px;
+    /* Pulse animation when there are unread messages */
+    .lb-button.unread::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid #f4d97d;
+      animation: lb-pulse 2s infinite;
+    }
+
+    @keyframes lb-pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.3); opacity: 0; }
     }
 
     .lb-chatbox {
       position: fixed;
       bottom: 100px;
       right: 24px;
-      width: 380px;
-      height: 550px;
+      width: 360px;
+      height: 500px;
       background: #fefdfb;
       border-radius: 16px;
       border: 1px solid #e8dcc8;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
       display: none;
       flex-direction: column;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       z-index: 9999;
-      animation: slideUp 0.3s ease;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      animation: lb-slideUp 0.3s ease;
+    }
+
+    @keyframes lb-slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .lb-chatbox.show {
       display: flex;
     }
 
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .lb-chatbox.hide {
+      animation: lb-slideDown 0.3s ease;
+    }
+
+    @keyframes lb-slideDown {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(20px);
+      }
     }
 
     .lb-header {
-      background: #f5f1e8;
-      color: #1f1f1f;
-      padding: 16px 20px;
+      padding: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #e8dcc8;
-      gap: 12px;
+      background: #f5f1e8;
     }
 
     .lb-header-title {
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex: 1;
-    }
-
-    .lb-header-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #eee5d3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-
-    .lb-header-info h3 {
-      font-size: 16px;
+      gap: 8px;
       font-weight: 600;
-      margin: 0;
+      font-size: 16px;
       color: #1f1f1f;
     }
 
-    .lb-header-info p {
-      font-size: 12px;
-      opacity: 0.6;
-      margin-top: 2px;
-      color: #666;
+    .lb-status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: lb-blink 2s infinite;
+    }
+
+    @keyframes lb-blink {
+      0%, 49%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
 
     .lb-header-controls {
       display: flex;
       gap: 8px;
-      align-items: center;
     }
 
-    .lb-theme-toggle,
-    .lb-close-btn {
+    .lb-header-controls button {
       background: none;
       border: none;
       cursor: pointer;
       font-size: 18px;
-      opacity: 0.6;
-      transition: opacity 0.2s, transform 0.2s;
+      color: #666;
+      transition: color 0.2s;
       padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .lb-theme-toggle:hover,
-    .lb-close-btn:hover {
-      opacity: 1;
-      transform: scale(1.1);
+    .lb-header-controls button:hover {
+      color: #1f1f1f;
     }
 
     .lb-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
-      background: #fefdfb;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: #e8dcc8 transparent;
     }
 
     .lb-messages::-webkit-scrollbar {
@@ -263,104 +278,95 @@
       border-radius: 3px;
     }
 
-    .lb-messages::-webkit-scrollbar-thumb:hover {
-      background: #dcc8b0;
-    }
-
     .lb-message-wrapper {
       display: flex;
-      gap: 8px;
-      animation: fadeIn 0.3s ease;
+      align-items: flex-end;
+      gap: 6px;
+      animation: lb-fadeIn 0.3s ease;
+    }
+
+    @keyframes lb-fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .lb-message-wrapper.user {
       justify-content: flex-end;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
     .lb-message {
-      padding: 12px 16px;
-      border-radius: 14px;
+      padding: 10px 14px;
+      border-radius: 12px;
       max-width: 75%;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.4;
       word-wrap: break-word;
-      color:white
+      transition: background 0.2s;
     }
 
     .lb-message.user {
       background: #f5f1e8;
       color: #1f1f1f;
-      border-radius: 14px 14px 4px 14px;
-      border: 1px solid #e8dcc8;
+      border-bottom-right-radius: 4px;
     }
 
     .lb-message.bot {
       background: #faf8f4;
-      color: #333;
-      border-radius: 14px 14px 14px 4px;
-      border: 1px solid #e8dcc8;
+      color: #1f1f1f;
+      border-bottom-left-radius: 4px;
     }
 
-    .lb-message.streaming {
-      min-height: 20px;
+    .lb-message-time {
+      font-size: 11px;
+      color: #999;
+      white-space: nowrap;
+      align-self: center;
     }
 
-    .lb-typing {
-      display: flex;
-      gap: 4px;
-      padding: 12px 16px;
-      background: #faf8f4;
-      border-radius: 14px 14px 14px 4px;
-      border: 1px solid #e8dcc8;
-      width: fit-content;
+    .lb-typing-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 14px;
+      background: #1f1f1f;
+      margin-left: 2px;
+      animation: lb-cursor-blink 1s infinite;
     }
 
-    .lb-typing-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #d4c4a8;
-      animation: typing 1.4s infinite;
-    }
-
-    .lb-typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .lb-typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes typing {
-      0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
-      30% { opacity: 1; transform: translateY(-6px); }
+    @keyframes lb-cursor-blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
     }
 
     .lb-input-wrapper {
       display: flex;
-      gap: 10px;
-      padding: 16px;
-      background: #fefdfb;
+      padding: 12px;
       border-top: 1px solid #e8dcc8;
+      gap: 8px;
+      background: #fefdfb;
     }
 
     .lb-input {
       flex: 1;
-      padding: 12px 16px;
-      border: 2px solid #e8dcc8;
-      border-radius: 24px;
-      font-size: 14px;
+      padding: 10px 14px;
+      border-radius: 20px;
+      border: 1px solid #e8dcc8;
       outline: none;
+      font-size: 14px;
       font-family: inherit;
-      background: #faf8f4;
-      color: #1f1f1f;
-      transition: all 0.2s ease;
+      transition: border-color 0.2s;
+      resize: none;
+      max-height: 100px;
     }
 
     .lb-input:focus {
       border-color: #f4d97d;
-      background: #fff;
-      box-shadow: 0 0 8px rgba(244, 217, 125, 0.2);
+      background: #fffbf0;
     }
 
     .lb-input::placeholder {
@@ -373,202 +379,215 @@
       border-radius: 50%;
       border: none;
       background: #f4d97d;
-      color: #1f1f1f;
       cursor: pointer;
-      font-size: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
-      font-weight: 600;
+      transition: all 0.2s;
+      font-size: 14px;
+      color: #2d2d2d;
     }
 
-    .lb-send-btn:hover {
-      transform: scale(1.1);
-      background: #f0ce6b;
-      box-shadow: 0 4px 12px rgba(244, 217, 125, 0.3);
+    .lb-send-btn:hover:not(:disabled) {
+      background: #f0ce60;
+      transform: scale(1.05);
     }
 
-    .lb-send-btn:active {
+    .lb-send-btn:active:not(:disabled) {
       transform: scale(0.95);
     }
 
-    .lb-welcome-message {
-      text-align: center;
-      padding: 20px;
-      color: #666;
+    .lb-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
-    .lb-welcome-icon {
-      font-size: 42px;
-      margin-bottom: 12px;
-      animation: float 3s ease-in-out infinite;
+    .lb-loading {
+      display: flex;
+      gap: 4px;
+      align-items: center;
     }
 
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
+    .lb-loading-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #1f1f1f;
+      animation: lb-bounce 1.4s infinite;
     }
 
-    .lb-welcome-text {
-      font-size: 14px;
-      line-height: 1.6;
+    .lb-loading-dot:nth-child(2) {
+      animation-delay: 0.2s;
     }
 
-    .lb-welcome-text strong {
-      color: #1f1f1f;
+    .lb-loading-dot:nth-child(3) {
+      animation-delay: 0.4s;
     }
 
-    .lb-clear-history {
-      font-size: 12px;
-      color: #999;
-      text-align: center;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #e8dcc8;
+    @keyframes lb-bounce {
+      0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+      40% { transform: scale(1); opacity: 1; }
     }
 
-    .lb-clear-history-btn {
-      background: none;
-      border: none;
-      color: #f4d97d;
-      cursor: pointer;
-      font-size: 12px;
-      text-decoration: underline;
+    /* ========== DARK MODE ========== */
+    body.lb-dark-mode .lb-chatbox {
+      background: #111827;
+      border-color: #374151;
     }
 
-    .lb-clear-history-btn:hover {
-      color: #f0ce6b;
+    body.lb-dark-mode .lb-header {
+      background: #1f2937;
+      border-color: #374151;
+      color: white;
     }
 
+    body.lb-dark-mode .lb-header-title {
+      color: white;
+    }
+
+    body.lb-dark-mode .lb-header-controls button {
+      color: #9ca3af;
+    }
+
+    body.lb-dark-mode .lb-header-controls button:hover {
+      color: white;
+    }
+
+    body.lb-dark-mode .lb-message.user {
+      background: #374151;
+      color: white;
+    }
+
+    body.lb-dark-mode .lb-message.bot {
+      background: #1f2937;
+      color: #e5e7eb;
+    }
+
+    body.lb-dark-mode .lb-input {
+      background: #1f2937;
+      color: white;
+      border-color: #374151;
+    }
+
+    body.lb-dark-mode .lb-input:focus {
+      background: #111827;
+      border-color: #f4d97d;
+    }
+
+    body.lb-dark-mode .lb-input-wrapper {
+      background: #111827;
+      border-color: #374151;
+    }
+
+    body.lb-dark-mode .lb-typing-cursor {
+      background: #e5e7eb;
+    }
+
+    body.lb-dark-mode .lb-button {
+      background: #1f2937;
+      border-color: #374151;
+      color: #f5f1e8;
+    }
+
+    body.lb-dark-mode .lb-button:hover {
+      background: #374151;
+    }
+
+    /* Mobile responsive */
     @media (max-width: 480px) {
       .lb-chatbox {
-        width: 100%;
-        height: 100%;
-        max-height: 100vh;
-        border-radius: 0;
-        bottom: 0;
-        right: 0;
+        width: calc(100vw - 32px);
+        height: 450px;
+        bottom: 90px;
       }
 
       .lb-message {
         max-width: 85%;
       }
-
-      .lb-header-info h3 {
-        font-size: 14px;
-      }
     }
   `;
   document.head.appendChild(style);
 
-  /* =============================
-     ANIMATED SVG ICON
-  ==============================*/
-  function createAnimatedSVG() {
-    return `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" 
-              stroke-dasharray="60" 
-              stroke-dashoffset="60"
-              style="animation: drawSVG 2s ease-in-out infinite;">
-        </path>
-      </svg>
-      <style>
-        @keyframes drawSVG {
-          0%, 100% { stroke-dashoffset: 60; }
-          50% { stroke-dashoffset: 0; }
-        }
-      </style>
-    `;
-  }
-
-  /* =============================
-     STORAGE MANAGEMENT
-  ==============================*/
+  /* ================= STORAGE ================= */
   const Storage = {
     getHistory: () => {
-      try {
-        return JSON.parse(localStorage.getItem(DEFAULTS.storageKey)) || [];
-      } catch {
-        return [];
-      }
+      const data = JSON.parse(localStorage.getItem(DEFAULTS.storageKey) || "[]");
+      return data.slice(-DEFAULTS.maxMessages);
     },
-    saveHistory: (messages) => {
-      try {
-        localStorage.setItem(DEFAULTS.storageKey, JSON.stringify(messages));
-      } catch (e) {
-        console.warn('Failed to save chat history:', e);
-      }
+    saveHistory: (data) =>
+      localStorage.setItem(DEFAULTS.storageKey, JSON.stringify(data)),
+    getTheme: () => localStorage.getItem(DEFAULTS.storageTheme),
+    saveTheme: (t) => localStorage.setItem(DEFAULTS.storageTheme, t)
+  };
+
+  /* ================= UTILITY FUNCTIONS ================= */
+  const Utils = {
+    sanitizeHTML(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
     },
-    getTheme: () => {
-      return localStorage.getItem(DEFAULTS.storageTheme) || 'light';
+
+    formatTime(date = new Date()) {
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      });
     },
-    saveTheme: (theme) => {
-      localStorage.setItem(DEFAULTS.storageTheme, theme);
-    },
-    clearHistory: () => {
-      localStorage.removeItem(DEFAULTS.storageKey);
+
+    debounce(func, delay) {
+      let timeout;
+      return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+      };
     }
   };
 
-  /* =============================
-     AUDIO EFFECTS
-  ==============================*/
-  const Audio = {
-    playTyping: () => {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 300;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    }
-  };
-
-  /* =============================
-     CREATE ELEMENTS
-  ==============================*/
+  /* ================= CREATE UI ================= */
   const button = document.createElement("button");
   button.className = "lb-button";
-  button.innerHTML = createAnimatedSVG();
+  button.innerHTML = SVG_ICON;
+  button.setAttribute("aria-label", "Open chat");
 
   const chatbox = document.createElement("div");
   chatbox.className = "lb-chatbox";
-
+  chatbox.setAttribute("role", "dialog");
+  chatbox.setAttribute("aria-label", "Chat");
   chatbox.innerHTML = `
     <div class="lb-header">
       <div class="lb-header-title">
-        <div class="lb-header-avatar">🤖</div>
-        <div class="lb-header-info">
-          <h3>ai assistant</h3>
-          <p>Always here to help</p>
-        </div>
+        <span class="lb-status-indicator"></span>
+        AI Assistant
       </div>
       <div class="lb-header-controls">
-        <button class="lb-theme-toggle" id="lb-theme" title="Toggle dark mode">🌙</button>
-        <button class="lb-close-btn" id="lb-close">✕</button>
+        <button id="lb-clear" title="Clear history" aria-label="Clear chat history">
+          <i class="ri-delete-bin-line"></i>
+        </button>
+        <button id="lb-theme" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <i class="ri-moon-line"></i>
+        </button>
+        <button id="lb-close" title="Close" aria-label="Close chat">
+          <i class="ri-close-line"></i>
+        </button>
       </div>
     </div>
-    <div class="lb-messages" id="lb-messages"></div>
+
+    <div id="lb-messages" class="lb-messages"></div>
+
     <div class="lb-input-wrapper">
-      <input 
-        type="text" 
-        class="lb-input" 
-        id="lb-input" 
-        placeholder="Ask me anything..." 
+      <input
+        id="lb-input"
+        type="text"
+        class="lb-input"
+        placeholder="Type a message..."
+        aria-label="Message input"
+        autocomplete="off"
       />
-      <button class="lb-send-btn" id="lb-send">➤</button>
+      <button id="lb-send" class="lb-send-btn" aria-label="Send message">
+        <i class="ri-send-plane-fill"></i>
+      </button>
     </div>
   `;
 
@@ -577,232 +596,210 @@
 
   const messagesDiv = chatbox.querySelector("#lb-messages");
   const input = chatbox.querySelector("#lb-input");
-  let messages = Storage.getHistory();
-  let isStreaming = false;
+  const sendBtn = chatbox.querySelector("#lb-send");
 
-  /* =============================
-     MESSAGE FUNCTIONS
-  ==============================*/
-  function addMessage(text, type, streaming = false) {
+  let messages = Storage.getHistory();
+  let streaming = false;
+  let hasUnread = false;
+
+  /* ================= MESSAGE FUNCTIONS ================= */
+  function addMessage(text, role, timestamp = new Date()) {
     const wrapper = document.createElement("div");
-    wrapper.className = `lb-message-wrapper ${type === "lb-user" ? "user" : "bot"}`;
+    wrapper.className = "lb-message-wrapper " + role;
 
     const msg = document.createElement("div");
-    msg.className = `lb-message ${type}${streaming ? ' streaming' : ''}`;
-    msg.innerText = text;
-
+    msg.className = "lb-message " + role;
+    msg.innerHTML = Utils.sanitizeHTML(text);
     wrapper.appendChild(msg);
+
+    if (DEFAULTS.enableTimestamps) {
+      const time = document.createElement("div");
+      time.className = "lb-message-time";
+      time.textContent = Utils.formatTime(timestamp);
+      wrapper.appendChild(time);
+    }
+
     messagesDiv.appendChild(wrapper);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
     return msg;
   }
 
   function streamMessage(text) {
-    isStreaming = true;
-    const msg = addMessage('', 'lb-bot', true);
-    let charIndex = 0;
+    streaming = true;
+    sendBtn.disabled = true;
 
-    const stream = setInterval(() => {
-      if (charIndex < text.length) {
-        msg.innerText += text[charIndex];
-        charIndex++;
-        try {
-          Audio.playTyping();
-        } catch (e) {
-          // Audio context not available
-        }
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      } else {
-        clearInterval(stream);
-        isStreaming = false;
-        // Save message to history
-        messages.push({ role: 'assistant', content: text });
+    const wrapper = document.createElement("div");
+    wrapper.className = "lb-message-wrapper bot";
+    const msg = document.createElement("div");
+    msg.className = "lb-message bot";
+    msg.innerHTML = "";
+    wrapper.appendChild(msg);
+    messagesDiv.appendChild(wrapper);
+
+    let i = 0;
+    const interval = setInterval(() => {
+      msg.innerHTML = Utils.sanitizeHTML(text.substring(0, i + 1)) +
+        '<span class="lb-typing-cursor"></span>';
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      AudioManager.playTypingSound();
+      i++;
+
+      if (i >= text.length) {
+        clearInterval(interval);
+        msg.innerHTML = Utils.sanitizeHTML(text);
+        streaming = false;
+        sendBtn.disabled = false;
+        messages.push({ role: "bot", content: text, timestamp: new Date() });
         Storage.saveHistory(messages);
       }
     }, DEFAULTS.typingSpeed);
   }
 
-  function addTypingIndicator() {
+  function showLoadingState() {
     const wrapper = document.createElement("div");
     wrapper.className = "lb-message-wrapper bot";
-    wrapper.id = "lb-typing";
-
-    const typing = document.createElement("div");
-    typing.className = "lb-typing";
-    typing.innerHTML = `
-      <div class="lb-typing-dot"></div>
-      <div class="lb-typing-dot"></div>
-      <div class="lb-typing-dot"></div>
-    `;
-
-    wrapper.appendChild(typing);
+    wrapper.id = "lb-loading";
+    const loading = document.createElement("div");
+    loading.className = "lb-message bot lb-loading";
+    loading.innerHTML =
+      '<div class="lb-loading-dot"></div><div class="lb-loading-dot"></div><div class="lb-loading-dot"></div>';
+    wrapper.appendChild(loading);
     messagesDiv.appendChild(wrapper);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  function removeTypingIndicator() {
-    const typing = document.getElementById("lb-typing");
-    if (typing) typing.remove();
+  function removeLoadingState() {
+    const loading = document.getElementById("lb-loading");
+    if (loading) loading.remove();
   }
 
-  function addWelcomeMessage() {
-    const wrapper = document.createElement("div");
-    wrapper.className = "lb-message-wrapper bot";
-
-    const welcome = document.createElement("div");
-    welcome.className = "lb-welcome-message";
-    welcome.innerHTML = `
-      <div class="lb-welcome-icon">👋</div>
-      <div class="lb-welcome-text">
-        <strong>Hi there!</strong><br>
-        How can I help you today?
-      </div>
-    `;
-
-    wrapper.appendChild(welcome);
-    messagesDiv.appendChild(wrapper);
-  }
-
-  function loadChatHistory() {
-    messagesDiv.innerHTML = '';
+  function loadHistory() {
     if (messages.length === 0) {
-      addWelcomeMessage();
+      addMessage("👋 Hi! How can I help you today?", "bot");
     } else {
-      messages.forEach(msg => {
-        addMessage(msg.content, msg.role === 'user' ? 'lb-user' : 'lb-bot');
+      messages.forEach((m) => {
+        const ts = m.timestamp ? new Date(m.timestamp) : new Date();
+        addMessage(m.content, m.role === "user" ? "user" : "bot", ts);
       });
     }
   }
 
-  /* =============================
-     SEND MESSAGE
-  ==============================*/
+  function clearHistory() {
+    if (confirm("Clear all messages? This cannot be undone.")) {
+      messages = [];
+      messagesDiv.innerHTML = "";
+      Storage.saveHistory(messages);
+      addMessage("👋 Chat cleared. How can I help?", "bot");
+    }
+  }
+
+  /* ================= SEND MESSAGE ================= */
   async function sendMessage() {
-    if (isStreaming) return;
+    if (streaming) return;
 
-    const message = input.value.trim();
-    if (!message) return;
+    const text = input.value.trim();
+    if (!text) return;
 
-    addMessage(message, "lb-user");
-    messages.push({ role: 'user', content: message });
+    addMessage(text, "user");
+    messages.push({ role: "user", content: text, timestamp: new Date() });
     Storage.saveHistory(messages);
     input.value = "";
-    input.focus();
+    sendBtn.disabled = true;
 
-    addTypingIndicator();
+    showLoadingState();
 
     try {
-      const response = await fetch(
-        config.apiUrl ? `${config.apiUrl}/api/public/chat` : "http://localhost:4000/api/public/chat",
+      const res = await fetch(
+        `${config.apiUrl || "http://localhost:4000"}/api/public/chat`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-public-key": config.publicKey,
+            "x-public-key": config.publicKey
           },
-          body: JSON.stringify({ message }),
+          body: JSON.stringify({ message: text })
         }
       );
 
-      if (!response.ok) throw new Error("API Error");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await response.json();
-      removeTypingIndicator();
-      
-      // Stream the response
-      streamMessage(data.aiResponse || data.response || "No response received.");
-
-    } catch (err) {
-      removeTypingIndicator();
-      streamMessage("Sorry, something went wrong. Please try again.");
-      console.error("LinguaBot Error:", err);
+      const data = await res.json();
+      removeLoadingState();
+      streamMessage(data.aiResponse || "Sorry, I didn't get a response.");
+    } catch (e) {
+      removeLoadingState();
+      streamMessage("❌ Error connecting to server. Please try again.");
+      console.error("Chat error:", e);
+    } finally {
+      sendBtn.disabled = false;
     }
   }
 
-  /* =============================
-     THEME TOGGLE
-  ==============================*/
-  function toggleTheme() {
-    const isDark = document.body.classList.contains('lb-dark-mode');
-    if (isDark) {
-      document.body.classList.remove('lb-dark-mode');
-      Storage.saveTheme('light');
-      chatbox.querySelector('#lb-theme').textContent = '🌙';
-    } else {
-      document.body.classList.add('lb-dark-mode');
-      Storage.saveTheme('dark');
-      chatbox.querySelector('#lb-theme').textContent = '☀️';
-    }
-  }
+  const debouncedSend = Utils.debounce(sendMessage, 300);
 
-  /* =============================
-     AUTO POPUP
-  ==============================*/
-  function setupAutoPopup() {
-    const hasVisited = sessionStorage.getItem('linguabot_visited');
-    if (!hasVisited && config.autoPopup !== false) {
-      setTimeout(() => {
-        chatbox.classList.add("show");
-        button.classList.add("active");
-        input.focus();
-        sessionStorage.setItem('linguabot_visited', 'true');
-      }, config.autoPopupDelay || DEFAULTS.autoPopupDelay);
-    }
-  }
-
-  /* =============================
-     INITIALIZATION
-  ==============================*/
-  function init() {
-    // Load theme
-    const savedTheme = Storage.getTheme();
-    if (savedTheme === 'dark') {
-      document.body.classList.add('lb-dark-mode');
-      chatbox.querySelector('#lb-theme').textContent = '☀️';
-    }
-
-    // Load chat history
-    loadChatHistory();
-
-    // Setup auto popup
-    setupAutoPopup();
-  }
-
-  /* =============================
-     EVENTS
-  ==============================*/
+  /* ================= EVENT LISTENERS ================= */
   button.onclick = () => {
-    const isVisible = chatbox.classList.contains("show");
-    if (!isVisible) {
-      chatbox.classList.add("show");
-      button.classList.add("active");
-      input.focus();
-    } else {
-      chatbox.classList.remove("show");
-      button.classList.remove("active");
-    }
-  };
-
-  chatbox.querySelector("#lb-theme").onclick = (e) => {
-    e.stopPropagation();
-    toggleTheme();
+    chatbox.classList.toggle("show");
+    button.classList.remove("unread");
+    hasUnread = false;
   };
 
   chatbox.querySelector("#lb-close").onclick = () => {
-    chatbox.classList.remove("show");
-    button.classList.remove("active");
+    chatbox.classList.add("hide");
+    setTimeout(() => {
+      chatbox.classList.remove("show", "hide");
+    }, 300);
   };
 
-  chatbox.querySelector("#lb-send").onclick = sendMessage;
+  chatbox.querySelector("#lb-clear").onclick = clearHistory;
 
-  input.addEventListener("keypress", function (e) {
+  sendBtn.onclick = sendMessage;
+
+  input.addEventListener("keypress", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   });
 
-  // Initialize
-  init();
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      chatbox.classList.add("hide");
+      setTimeout(() => {
+        chatbox.classList.remove("show", "hide");
+      }, 300);
+    }
+  });
+
+  chatbox.querySelector("#lb-theme").onclick = () => {
+    const isDark = document.body.classList.toggle("lb-dark-mode");
+    Storage.saveTheme(isDark ? "dark" : "light");
+    const icon = chatbox.querySelector("#lb-theme i");
+    icon.className = isDark ? "ri-sun-line" : "ri-moon-line";
+  };
+
+  /* ================= AUTO POPUP ================= */
+  setTimeout(() => {
+    if (!sessionStorage.getItem("lb_popup")) {
+      chatbox.classList.add("show");
+      sessionStorage.setItem("lb_popup", "1");
+    }
+  }, DEFAULTS.autoPopupDelay);
+
+  /* ================= INIT ================= */
+  // AudioManager.init();
+
+  const isDark = Storage.getTheme() === "dark";
+  if (isDark) {
+    document.body.classList.add("lb-dark-mode");
+    chatbox.querySelector("#lb-theme i").className = "ri-sun-line";
+  }
+
+  loadHistory();
+
+  // Update input height as user types
+  input.addEventListener("input", () => {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 100) + "px";
+  });
 })();
