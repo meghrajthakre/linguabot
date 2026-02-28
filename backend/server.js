@@ -8,6 +8,7 @@ import connectDB from './config/db.js';
 import rateLimiter from './middleware/rateLimiter.middleware.js';
 import errorHandler from './middleware/errorHandler.middleware.js';
 
+import publicRoutes from './routes/public.routes.js'
 import authRoutes from './routes/auth.routes.js';
 import botsRoutes from './routes/bots.routes.js';
 import chatRoutes from './routes/chat.routes.js';
@@ -15,6 +16,8 @@ import analyticsRoutes from './routes/analytics.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+
 // Connect to MongoDB
 connectDB(process.env.MONGO_URI);
 // Middleware
@@ -25,12 +28,15 @@ app.use(cors({
   credentials: true
 }));
 // app.use(rateLimiter); // global rate limiter
+
+
 // Register routes
+app.use(express.static("public"));
 app.use('/api/auth', authRoutes);
 app.use('/api/bots', botsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/analytics', analyticsRoutes);
-
+app.use('/api/public/chat', publicRoutes);
 // Global error handler
 app.use(errorHandler);
 

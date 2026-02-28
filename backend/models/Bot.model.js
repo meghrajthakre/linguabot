@@ -62,6 +62,16 @@ const botSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    publicKey: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    allowedDomains: [
+      {
+        type: String,
+      }],
   },
   { timestamps: true }
 );
