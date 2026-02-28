@@ -17,18 +17,50 @@ import analyticsRoutes from './routes/analytics.routes.js';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-
 // Connect to MongoDB
 connectDB(process.env.MONGO_URI);
+
+// ========== CORS CONFIGURATION ==========
+// Allow multiple origins for development
+const allowedOrigins = [
+  "http://localhost:5173",      // React Vite dev server
+  "http://localhost:3000",      // Alternative frontend port
+  "http://localhost:8000",      // Another common port
+  "http://127.0.0.1:5173",      // IPv4 localhost Vite
+  "http://127.0.0.1:5500",      // VS Code Live Server
+  "http://127.0.0.1:8000",      // Alternative IPv4
+  "http://127.0.0.1:15500",     // Another port
+  "http://localhost:15500",     // Another common port
+];
+
+// For production, use environment variable
+if (process.env.NODE_ENV === 'production') {
+  // In production, use specific domain
+  allowedOrigins.length = 0;
+  allowedOrigins.push(process.env.FRONTEND_URL || "https://yourdomain.com");
+}
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl requests, same-origin requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-public-key', 'Authorization']
+}));
+
 // Middleware
 app.use(express.json()); // parse JSON body
 app.use(cookieParser());
-app.use(cors({
-  origin: "http://localhost:5173", // frontend URL (React Vite)
-  credentials: true
-}));
 // app.use(rateLimiter); // global rate limiter
-
 
 // Register routes
 app.use(express.static("public"));
@@ -37,9 +69,11 @@ app.use('/api/bots', botsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/public/chat', publicRoutes);
+
 // Global error handler
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-    console.log(`LinguaBot backend running on port ${PORT}`);
+    console.log(`🚀 LinguaBot backend running on http://localhost:${PORT}`);
+    console.log(`📝 Allowed origins:`, allowedOrigins);
 });
