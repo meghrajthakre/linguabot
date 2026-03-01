@@ -15,19 +15,26 @@ import { Toaster } from "react-hot-toast";
 import NotFound from "./components/NotFound";
 import HowToMakeBot from "./pages/Howtomakebotguide";
 import Footer from "./pages/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 
 const App = () => {
   return (
     <BrowserRouter>
+
       <AuthProvider>
+        <ScrollToTop />
+
         <Toaster position="top-right" reverseOrder={false} />
         <Routes>
 
           {/* Protected Layout */}
           <Route
+
             element={
               <ProtectedRoute>
                 <Layout />
+                <Footer />
+
               </ProtectedRoute>
             }
           >
@@ -46,7 +53,6 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
 
         </Routes>
-        <Footer />
       </AuthProvider>
     </BrowserRouter>
   );

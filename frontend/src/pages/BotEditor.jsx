@@ -36,7 +36,9 @@ const BotEditor = () => {
   const closeConfirmModal = () => {
     setConfirmConfig(null);
   };
-
+useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
   /* ================= FETCH BOT ================= */
   useEffect(() => {
     const fetchBot = async () => {

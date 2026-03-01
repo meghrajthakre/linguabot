@@ -81,7 +81,7 @@ const BotCard = ({ bot, onDelete }) => {
     publicKey: "${bot.publicKey}"
   };
 </script>
-<script src="https://widget.linguabot.com/widget.js"><\/script>`;
+<script src="http://localhost:4000/widget.js"><\/script>`;
 
     navigator.clipboard.writeText(embedCode).then(() => {
       setEmbedCopied(true);
@@ -226,11 +226,11 @@ const BotCard = ({ bot, onDelete }) => {
               <div className="p-6 space-y-4">
                 <div className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-xs overflow-x-auto">
                   {`<script>
-  window.LinguaBotConfig = {
-    publicKey: "${bot.publicKey}"
-  };
-</script>
-<script src="https://widget.linguabot.com/widget.js"><\/script>`}
+                window.LinguaBotConfig = {
+                  publicKey: "${bot.publicKey}"
+                };
+              </script>
+              <script src="http://localhost:4000/widget.js"><\/script>`}
                 </div>
               </div>
 
