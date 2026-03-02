@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL: "https://romantic-happiness-production-b369.up.railway.app/api",
   withCredentials: true,
 });
 
