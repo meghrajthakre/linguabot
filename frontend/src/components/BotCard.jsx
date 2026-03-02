@@ -11,7 +11,7 @@ import {
   Code,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 const LANGUAGE_COLORS = {
   english: "bg-blue-100 text-blue-700",
