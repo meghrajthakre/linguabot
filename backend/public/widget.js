@@ -710,7 +710,7 @@
 
     try {
       const res = await fetch(
-        `${config.apiUrl || "http://localhost:4000"}/api/public/chat`,
+        `${config.apiUrl || "romantic-happiness-production-b369.up.railway.app"}/api/public/chat`,
         {
           method: "POST",
           headers: {
