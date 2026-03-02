@@ -18,7 +18,7 @@ import Footer from "./pages/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import TermsOfService from "./pages/Termsofservice";
 import CookiesPolicy from "./pages/Cookiespolicy";
-import PrivacyPolicy from "./pages/Privacypolicy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const App = () => {
   return (
