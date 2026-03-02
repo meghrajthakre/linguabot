@@ -37,7 +37,7 @@ const allowedOrigins = [
 if (process.env.NODE_ENV === 'production') {
   // In production, use specific domain
   allowedOrigins.length = 0;
-  allowedOrigins.push(process.env.FRONTEND_URL || "https://yourdomain.com");
+  allowedOrigins.push(process.env.FRONTEND_URL || "https://linguabot-xi.vercel.app");
 }
 
 app.use(cors({
