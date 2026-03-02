@@ -36,9 +36,13 @@ const allowedOrigins = [
 
 
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "x-public-key"]
 }));
+
+
 // Middleware
 app.use(express.json()); // parse JSON body
 app.use(cookieParser());
