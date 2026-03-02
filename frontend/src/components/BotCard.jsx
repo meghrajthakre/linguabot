@@ -81,7 +81,7 @@ const BotCard = ({ bot, onDelete }) => {
     publicKey: "${bot.publicKey}"
   };
 </script>
-<script src="romantic-happiness-production-b369.up.railway.app"><\/script>`;
+<script src="http://romantic-happiness-production-b369.up.railway.app/widget.js"><\/script>`;
 
     navigator.clipboard.writeText(embedCode).then(() => {
       setEmbedCopied(true);
@@ -230,7 +230,7 @@ const BotCard = ({ bot, onDelete }) => {
                   publicKey: "${bot.publicKey}"
                 };
               </script>
-              <script src="romantic-happiness-production-b369.up.railway.app"><\/script>`}
+              <script src="http://romantic-happiness-production-b369.up.railway.app/widget.js"><\/script>`}
                 </div>
               </div>
 
