@@ -230,7 +230,7 @@ const BotCard = ({ bot, onDelete }) => {
                   publicKey: "${bot.publicKey}"
                 };
               </script>
-              <script src="http://localhost:4000/widget.js"><\/script>`}
+              <script src="romantic-happiness-production-b369.up.railway.app"><\/script>`}
                 </div>
               </div>
 
