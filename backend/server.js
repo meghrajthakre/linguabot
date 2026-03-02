@@ -25,7 +25,6 @@ connectDB(process.env.MONGO_URI);
 const allowedOrigins = [
   "http://localhost:5173",
   "https://linguabot-xi.vercel.app",
-  "http://localhost:5173",      // React Vite dev server
   "http://localhost:3000",      // Alternative frontend port
   "http://localhost:8000",      // Another common port
   "http://127.0.0.1:5173",      // IPv4 localhost Vite
