@@ -16,6 +16,9 @@ import NotFound from "./components/NotFound";
 import HowToMakeBot from "./pages/Howtomakebotguide";
 import Footer from "./pages/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import TermsOfService from "./pages/Termsofservice";
+import CookiesPolicy from "./pages/Cookiespolicy";
+import PrivacyPolicy from "./pages/Privacypolicy";
 
 const App = () => {
   return (
@@ -39,12 +42,15 @@ const App = () => {
             }
           >
             <Route path="/" element={<Dashboard />} />
-            <Route path="/create-bot" element={<CreateBot/>} />
+            <Route path="/create-bot" element={<CreateBot />} />
             <Route path="/bot/:id" element={<BotView />} />
-            <Route path="/bot/:id/edit" element={<BotEditor/>} />
+            <Route path="/bot/:id/edit" element={<BotEditor />} />
             <Route path="/bot/:id/analytics" element={<Analytics />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/how-to-make-bot" element={<HowToMakeBot />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/cookies" element={<CookiesPolicy />} />
           </Route>
 
           {/* Public Routes */}
