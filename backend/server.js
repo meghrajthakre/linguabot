@@ -40,7 +40,19 @@ if (process.env.NODE_ENV === 'production') {
   allowedOrigins.push(process.env.FRONTEND_URL || "https://yourdomain.com");
 }
 
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  }
+}));
 
 // Middleware
 app.use(express.json()); // parse JSON body
