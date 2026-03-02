@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import ConfirmationModal from "../components/Confirmationmodal";
+import ConfirmationModal from "../components/ConfirmationModal";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Save, Plus, Trash2, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
@@ -36,9 +36,9 @@ const BotEditor = () => {
   const closeConfirmModal = () => {
     setConfirmConfig(null);
   };
-useEffect(() => {
-  window.scrollTo(0, 0);
-}, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   /* ================= FETCH BOT ================= */
   useEffect(() => {
     const fetchBot = async () => {
@@ -207,20 +207,20 @@ useEffect(() => {
   return (
     <div className="min-h-screen px-4 py-8">
       {/* BACK BUTTON */}
-        <div className="flex items-center justify-between mb-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition group"
-          >
-            <ArrowLeft
-              size={16}
-              className="transition-transform group-hover:-translate-x-1"
-            />
-            Back
-          </button>
-        </div>
+      <div className="flex items-center justify-between mb-2">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition group"
+        >
+          <ArrowLeft
+            size={16}
+            className="transition-transform group-hover:-translate-x-1"
+          />
+          Back
+        </button>
+      </div>
       <div className="max-w-4xl mx-auto space-y-8">
-        
+
 
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -230,7 +230,7 @@ useEffect(() => {
               Customize your AI assistant with all the details
             </p>
           </div>
-      
+
           <div className="flex gap-2">
             {hasUnsavedChanges && (
               <button
