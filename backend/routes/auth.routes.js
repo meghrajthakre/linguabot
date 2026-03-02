@@ -42,11 +42,10 @@ router.post("/login", async (req, res, next) => {
         const { user, token } = await loginUser({ email, password });
 
         // Set cookie
-        res.cookie("token", token, {
+         res.cookie("token", token, {
             httpOnly: true,
-            secure: false, // true in production
-            sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            secure: true,
+            sameSite: "None"
         });
 
         res.json({
