@@ -23,6 +23,8 @@ connectDB(process.env.MONGO_URI);
 // ========== CORS CONFIGURATION ==========
 // Allow multiple origins for development
 const allowedOrigins = [
+  "http://localhost:5173",
+  "https://linguabot-xi.vercel.app",
   "http://localhost:5173",      // React Vite dev server
   "http://localhost:3000",      // Alternative frontend port
   "http://localhost:8000",      // Another common port
@@ -33,27 +35,11 @@ const allowedOrigins = [
   "http://localhost:15500",     // Another common port
 ];
 
-// For production, use environment variable
-if (process.env.NODE_ENV === 'production') {
-  // In production, use specific domain
-  allowedOrigins.length = 0;
-  allowedOrigins.push(process.env.FRONTEND_URL || "https://linguabot-xi.vercel.app");
-}
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    console.error("Blocked by CORS:", origin);
-    return callback(new Error("Not allowed by CORS"));
-  },
+  origin: allowedOrigins,
   credentials: true
 }));
-
 // Middleware
 app.use(express.json()); // parse JSON body
 app.use(cookieParser());
