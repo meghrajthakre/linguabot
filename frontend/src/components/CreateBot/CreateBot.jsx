@@ -68,7 +68,7 @@ export const CreateBotForm = () => {
 
         toast.success("Bot created successfully! 🎉");
         reset();
-        navigate("/", { state: { botCreated: true } });
+        navigate("/dashboard", { state: { botCreated: true } });
       } catch (error) {
         console.error("Bot creation error:", error);
 

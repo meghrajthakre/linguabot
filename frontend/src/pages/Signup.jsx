@@ -37,7 +37,7 @@ const Signup = () => {
       console.log("Logged in user after signup:", res.data.user);
       setUser(res.data.user);
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed");
     } finally {

@@ -32,7 +32,7 @@ const Login = () => {
     });
 
     setUser(res.data.user);   // 🔥 update auth context
-    navigate("/");
+    navigate("/dashboard");
 
   } catch (err) {
     setError(err.response?.data?.message || "Login failed");
