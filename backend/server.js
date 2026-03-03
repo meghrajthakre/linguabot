@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
 import cors from 'cors';
-import cookieParser from "cookie-parser"; 
+import cookieParser from "cookie-parser";
 
 import connectDB from './config/db.js';
 import rateLimiter from './middleware/rateLimiter.middleware.js';
@@ -35,10 +35,19 @@ const allowedOrigins = [
 ];
 
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "https://linguabot-xi.vercel.app",
+      "http://localhost:5500",
+      "http://127.0.0.1:5500"
+    ],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "x-public-key"],
+    credentials: true
+
+  })
+);
 // Middleware
 app.use(express.json()); // parse JSON body
 app.use(cookieParser());
@@ -56,6 +65,6 @@ app.use('/api/public/chat', publicRoutes);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-    console.log(`🚀 LinguaBot backend running on http://localhost:${PORT}`);
-    console.log(`📝 Allowed origins:`, allowedOrigins);
+  console.log(`🚀 LinguaBot backend running on http://localhost:${PORT}`);
+  console.log(`📝 Allowed origins:`, allowedOrigins);
 });
