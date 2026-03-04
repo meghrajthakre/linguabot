@@ -3,6 +3,11 @@
 body {
   font-family: 'DM Sans', sans-serif;
 }
+/* ================= THEME COLOR ================= */
+:root {
+  --theme-color: #FACC15; /* tumhara yellow */
+  --theme-dark: #EAB308;
+}
 
 button {
   cursor: pointer;
@@ -15,4 +20,9 @@ button {
 
 .animate-scaleIn {
   animation: scaleIn 0.15s ease-out;
+}
+
+::selection {
+  background: var(--theme-color);
+  color: black;
 }
