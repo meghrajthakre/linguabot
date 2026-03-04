@@ -23,7 +23,7 @@ const Navbar = () => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const navLinks = [
-    { path: "/", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/bot", label: "Bot Editor", icon: Bot },
     { path: "/analytics", label: "Analytics", icon: BarChart3 },
   ];

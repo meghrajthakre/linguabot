@@ -13,7 +13,7 @@ const LandingPage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleGetStarted = () => navigate("/register");
+  const handleGetStarted = () => navigate("/signup");
   const handleLogin = () => navigate("/login");
 
   return (
