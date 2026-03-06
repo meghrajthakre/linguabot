@@ -41,10 +41,9 @@ const Navbar = () => {
           relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium
           transition-all duration-200
           ${mobile ? "w-full" : ""}
-          ${
-            active
-              ? "bg-yellow-400 text-white-500"
-              : "text-gray-600 hover:text-yellow-600 hover:bg-yellow-50"
+          ${active
+            ? "bg-yellow-400 text-white-500"
+            : "text-gray-600 hover:text-yellow-600 hover:bg-yellow-50"
           }
         `}
       >
@@ -76,7 +75,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3">
+            <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3">
               <div className="bg-yellow-400 p-2 rounded-xl shadow-sm">
                 <Bot className="text-white w-5 h-5" />
               </div>

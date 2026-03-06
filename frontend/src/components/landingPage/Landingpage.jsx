@@ -14,15 +14,22 @@ const LandingPage = () => {
   }, []);
 
   const handleGetStarted = () => navigate("/signup");
-  const handleLogin = () => navigate("/login");
+  const handleLogin = () => {
+    // Implement login logic or navigation
+    navigate("/login");
+  };
+  const handleViewDemo = () => {
+    // Implement demo viewing logic or navigation
+    alert("Demo coming soon!");
+  }
 
   return (
     <div className="relative bg-white text-gray-900 overflow-hidden">
       {/* ================= NAVBAR ================= */}
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
-            ? "bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm"
-            : "bg-white"
+          ? "bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm"
+          : "bg-white"
           }`}
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -98,10 +105,10 @@ const LandingPage = () => {
             </button>
 
             <button
-              onClick={handleLogin}
+              onClick={handleViewDemo}
               className="px-8 py-4 bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-white hover:border-yellow-400 hover:text-yellow-400 active:scale-95 transition-all duration-300 border border-gray-300"
             >
-              View Demo
+              <p>View Demo</p>
             </button>
           </div>
 
