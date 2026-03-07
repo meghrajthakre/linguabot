@@ -10,7 +10,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Pages
 import Dashboard from "./pages/Dashboard";
 import BotEditor from "./pages/BotEditor";
-import Analytics from "./pages/Analytics";
 import BotView from "./pages/BotView";
 import HowToMakeBot from "./pages/Howtomakebotguide";
 import LandingPage from "./components/landingPage/Landingpage";
@@ -31,7 +30,8 @@ import CreateBot from "./components/CreateBot";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "react-hot-toast";
 import NotFound from "./components/NotFound";
-
+import AnalyticsPage from './pages/AnalyticsPage';
+ 
 const App = () => {
   return (
     <BrowserRouter>
@@ -70,10 +70,7 @@ const App = () => {
             <Route path="/create-bot" element={<CreateBot />} />
             <Route path="/bot/:id" element={<BotView />} />
             <Route path="/bot/:id/edit" element={<BotEditor />} />
-            <Route path="/bot/:id/analytics" element={<Analytics />} />
-
-            {/* General Analytics */}
-            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
 
             {/* Guides */}
             <Route path="/how-to-make-bot" element={<HowToMakeBot />} />

@@ -12,7 +12,7 @@ import publicRoutes from './routes/public.routes.js'
 import authRoutes from './routes/auth.routes.js';
 import botsRoutes from './routes/bots.routes.js';
 import chatRoutes from './routes/chat.routes.js';
-import analyticsRoutes from './routes/analytics.routes.js';
+import analyticsRoutes from './routes/Analyticsroutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
