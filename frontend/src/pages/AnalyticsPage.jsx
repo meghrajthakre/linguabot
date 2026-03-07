@@ -32,27 +32,32 @@ const AnalyticsPage = () => {
 
   // Fetch analytics data
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get("/api/analytics", {
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+
+      const response = await axios.get(
+        "https://romantic-happiness-production-b369.up.railway.app/api/analytics",
+        {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        });
+        }
+      );
 
-        setAnalytics(response.data);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-        console.error("Analytics fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setAnalytics(response.data);
+      setError(null);
 
-    fetchAnalytics();
-  }, [dateRange]);
+    } catch (err) {
+      setError(err.message);
+      console.error("Analytics fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAnalytics();
+}, [dateRange]);
 
   if (loading) {
     return (
