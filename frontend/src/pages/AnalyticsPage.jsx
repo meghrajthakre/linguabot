@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { axios } from 'axios';
+
 import {
   LineChart,
   Line,
@@ -33,18 +35,13 @@ const AnalyticsPage = () => {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/analytics", {
+        const response = await axios.get("/api/analytics", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch analytics");
-        }
-
-        const data = await response.json();
-        setAnalytics(data);
+        setAnalytics(response.data);
         setError(null);
       } catch (err) {
         setError(err.message);
@@ -369,13 +366,12 @@ const AnalyticsPage = () => {
                           </td>
                           <td className="px-6 py-4">
                             <span
-                              className={`px-2 py-1 rounded text-xs font-semibold ${
-                                conv.responseTimeMs < 500
+                              className={`px-2 py-1 rounded text-xs font-semibold ${conv.responseTimeMs < 500
                                   ? "bg-emerald-500/20 text-emerald-300"
                                   : conv.responseTimeMs < 1000
                                     ? "bg-yellow-500/20 text-yellow-300"
                                     : "bg-red-500/20 text-red-300"
-                              }`}
+                                }`}
                             >
                               {conv.responseTimeMs}ms
                             </span>
